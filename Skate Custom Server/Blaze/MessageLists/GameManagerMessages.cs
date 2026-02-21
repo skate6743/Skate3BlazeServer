@@ -1,0 +1,46 @@
+﻿namespace Blaze.MessageLists
+{
+    public enum GameManagerMessage : ushort
+    {
+        destroyGame = 2,
+        advanceGameState = 3,
+        setGameSettings = 4,
+        setPlayerCapacity = 5,
+        setGameAttributes = 7,
+        setPlayerAttributes = 8,
+        joinGame = 9,
+        updatePlayerConnection = 10,
+        removePlayer = 11,
+        startMatchmaking = 13,
+        cancelMatchmaking = 14,
+        finalizeGameCreation = 15,
+        updateHostConnection = 16,
+        listGames = 17,
+        setPlayerCustomData = 18,
+        replayGame = 19,
+        returnDedicatedServerToPool = 20,
+        joinGameByGroup = 21,
+        leaveGameByGroup = 22,
+        migrateGame = 23,
+        createGame = 25,
+        updateGameSession = 26,
+        banPlayer = 27,
+        matchmakingDedicatedServerOverride = 28,
+        updateMeshConnection = 29,
+        joinGameByUserList = 30,
+        getGameListSnapshot = 100,
+        getGameListSubscription = 101,
+        destroyGameList = 102,
+        getFullGameData = 103,
+        getMatchmakingConfig = 104,
+        getGameDataFromId = 105,
+        addAdminPlayer = 106,
+        removeAdminPlayer = 107,
+        setPlayerTeam = 108,
+        changeGameTeamId = 109,
+        migrateAdminPlayer = 110,
+        registerDynamicDedicatedServerCreator = 150,
+        unregisterDynamicDedicatedServerCreator = 151
+    }
+
+}
