@@ -7,7 +7,7 @@ if (!localHost)
 
 ServerGlobals.ServerIP = ip;
 ServerGlobals.ServerPort = 42100;
-ServerGlobals.HttpServerPort = 18000;
+ServerGlobals.HttpServerPort = 80;
 
 // Game must send a heartbeat ping request every X seconds or disconnect client
 ServerGlobals.PingPeriodSecs = 20;
