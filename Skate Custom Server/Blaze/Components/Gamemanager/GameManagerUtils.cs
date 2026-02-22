@@ -11,7 +11,18 @@ namespace Blaze.Components.Gamemanager
     {
         public static async Task UserJoinGame(User matchmaker, Game game, bool joiningFromMatchmaking)
         {
+            // Not cleanest solution but wait for all joining players to be connected first
+            while (true)
+            {
+                lock (game.Lock)
+                {
+                    if (game.Players.All(plr => plr.PlayerData.PlayerState == (int)PlayerState.ACTIVE_CONNECTED))
+                        break;
+                }
+                await Task.Delay(100);
+            }
             uint gameId = game.GameData.GameId;
+
 
             ReplicatedGamePlayer replicatedPlayer = CreateReplicatedGamePlayer(matchmaker, game);
 
@@ -77,16 +88,6 @@ namespace Blaze.Components.Gamemanager
                 }
             }
 
-            await ServerUtils.SendNotificationToPlayers(
-                game,
-                new NotifyPlayerJoinCompleted
-                {
-                    GameId = game.GameData.GameId,
-                    PlayerId = matchmaker.UserIdentification.BlazeId
-                },
-                BlazeComponent.Gamemanager,
-                (ushort)GameManagerNotifications.NotifyPlayerJoinCompleted);
-
             matchmaker.CurrentGame = game;
         }
 
@@ -126,7 +127,7 @@ namespace Blaze.Components.Gamemanager
                 PlayerNetwork = user.ExtendedData.NetworkAddress,
                 SlotId = slotId,
                 SlotType = 0,
-                PlayerState = (int)PlayerState.ACTIVE_CONNECTED,
+                PlayerState = (int)PlayerState.ACTIVE_CONNECTING,
                 Team = 0xFFFF,
                 TeamIndex = 0xFFFF,
                 JoinDate = epochMicroseconds
@@ -223,7 +224,7 @@ namespace Blaze.Components.Gamemanager
                         return;
                     }
                 }
-
+                
                 // If player was host and left then migrate host
                 if (hostId == userBlazeId)
                 {

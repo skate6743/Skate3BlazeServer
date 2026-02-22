@@ -41,7 +41,7 @@ namespace Blaze
                     await StartMatchmakingHandler.HandleRequest(user, receivedPacket);
                     break;
                 case GameManagerMessage.updateMeshConnection:
-                    await ServerUtils.SendEmptyResponse(user, receivedPacket);
+                    await UpdateMeshConnectionHandler.HandleRequest(user, receivedPacket);
                     break;
                 case GameManagerMessage.migrateAdminPlayer:
                     await MigrateAdminPlayerHandler.HandleRequest(user, receivedPacket);

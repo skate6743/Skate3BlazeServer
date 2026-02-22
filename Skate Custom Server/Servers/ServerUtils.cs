@@ -3,6 +3,7 @@ using Blaze.Tdf.Types;
 using Servers.Blaze.Models;
 using Blaze.MessageLists;
 using Blaze.Components.Messaging.Notifications;
+using System.Collections.Immutable;
 
 namespace Servers
 {
@@ -50,10 +51,7 @@ namespace Servers
                 snapshot = game.Players.ToList();
             }
 
-            foreach (Player player in snapshot)
-            {
-                await player.UserData.Stream.WriteAsync(packet);
-            }
+            await Task.WhenAll(snapshot.Select(player => player.UserData.Stream.WriteAsync(packet).AsTask()));
         }
 
         public static async Task SendEmptyResponse(User receiver, byte[] packetBytes)
