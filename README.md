@@ -2,11 +2,14 @@
 Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Skate web features such as Import Skaters, Parks, etc. will be implemented eventually too :)
 
 ## Setup Guide
-Testing locally: Set IP/Hosts switches in Network config to gosredirector.ea.com==127.0.0.1&&downloads.skate.online.ea.com==127.0.0.1
+### Testing locally:
+Set IP/Hosts switches in Network config to gosredirector.ea.com==127.0.0.1&&downloads.skate.online.ea.com==127.0.0.1
 
-Hosting publicly: Port forward port 42100 for both UDP and TCP, and port 80 for TCP. Lastly set localhost to false in settings.json and launch the server.
+### Hosting publicly:
+Port forward port 42100 for both UDP and TCP, and port 80 for TCP. Lastly set localhost to false in settings.json and launch the server.
 
-Playing with friends via Radmin VPN (Must use Radmin instead of Hamachi): Take your Radmin IP (26.x.x.x), and in the settings.json
+### Playing with friends via Radmin VPN:
+Take your Radmin IP (26.x.x.x), and in the settings.json
 on set LocalHost to true and LocalIPAddress to your Radmin IP. Lastly you and your friends must set their IP/Hosts switches in  Network tab to "gosredirector.ea.com==RadminIPhere&&downloads.skate.online.ea.com==RradminIPhere"
 
 ## Special Thanks
