@@ -4,6 +4,7 @@ using Blaze.Components.Gamemanager.Models;
 using Blaze.GamemanagerComponent;
 using Servers.Blaze.Models;
 using Blaze.MessageLists;
+using Org.BouncyCastle.Asn1.X509;
 
 namespace Blaze.Components.Gamemanager.Handlers
 {
@@ -63,6 +64,7 @@ namespace Blaze.Components.Gamemanager.Handlers
                     if (!foundGame)
                         continue;
 
+                    matchmaker.isMatchmaking = true;
                     await GameManagerUtils.UserJoinGame(matchmaker, game, true);
                     return;
                 }

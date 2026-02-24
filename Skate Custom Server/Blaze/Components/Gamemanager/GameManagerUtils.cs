@@ -16,6 +16,9 @@ namespace Blaze.Components.Gamemanager
             {
                 lock (game.Lock)
                 {
+                    if (!matchmaker.isMatchmaking)
+                        return;
+
                     if (game.Players.All(plr => plr.PlayerData.PlayerState == (int)PlayerState.ACTIVE_CONNECTED))
                         break;
                 }
@@ -26,15 +29,16 @@ namespace Blaze.Components.Gamemanager
 
             ReplicatedGamePlayer replicatedPlayer = CreateReplicatedGamePlayer(matchmaker, game);
 
+            var newPlayer = new Player
+            {
+                PlayerData = replicatedPlayer,
+                UserData = matchmaker
+            };
+
             List<Player> snapshot;
             lock (game.Lock)
             {
-                game.Players.Add(
-                    new Player
-                    {
-                        PlayerData = replicatedPlayer,
-                        UserData = matchmaker
-                    });
+                game.Players.Add(newPlayer);
                 snapshot = game.Players.ToList();
             }
             
@@ -89,6 +93,8 @@ namespace Blaze.Components.Gamemanager
             }
 
             matchmaker.CurrentGame = game;
+            matchmaker.gamePlayer = newPlayer;
+            matchmaker.isMatchmaking = false;
         }
 
         public static byte FindFreeSlot(Game game)
@@ -220,6 +226,7 @@ namespace Blaze.Components.Gamemanager
                     {
                         ServerGlobals.Games.TryRemove(game.GameData.GameId, out _);
                         playerToRemove.UserData.CurrentGame = null;
+                        playerToRemove.UserData.gamePlayer = null;
                         Console.WriteLine($"{game.GameData.GameId} lobby has been destroyed due to no players!");
                         return;
                     }
@@ -239,6 +246,7 @@ namespace Blaze.Components.Gamemanager
             }
 
             playerToRemove.UserData.CurrentGame = null;
+            playerToRemove.UserData.gamePlayer = null;
         }
     }
 }

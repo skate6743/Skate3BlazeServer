@@ -120,10 +120,10 @@ namespace Blaze.Components.Gamemanager.Handlers
                     MatchmakingId = 123
                 },
                 BlazeComponent.Gamemanager,
-                (ushort)GameManagerNotifications.NotifyJoinGame
-            );
+                (ushort)GameManagerNotifications.NotifyJoinGame);
 
             joiningPlayer.CurrentGame = game;
+            joiningPlayer.gamePlayer = player;
         }
     }
 }

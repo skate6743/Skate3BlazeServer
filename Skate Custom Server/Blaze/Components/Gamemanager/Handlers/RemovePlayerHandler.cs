@@ -9,7 +9,7 @@ namespace Blaze.Components.Gamemanager.Handlers
         public static async Task HandleRequest(User user, byte[] packetBytes)
         {
             var request = BlazeMessage.CreateModelFromRequest<RemovePlayerRequest>(packetBytes);
-            Player playerToKick = user.CurrentGame.Players.Where(x=>x.PlayerData.PlayerId == request.PlayerId).First();
+            Player playerToKick = user.gamePlayer;
 
             // Only allow kicking self when not host
             if (playerToKick.UserData != user && user.CurrentGame.HostId != user.UserIdentification.BlazeId)

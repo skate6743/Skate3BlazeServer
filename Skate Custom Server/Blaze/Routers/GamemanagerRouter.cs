@@ -52,6 +52,9 @@ namespace Blaze
                 case GameManagerMessage.replayGame:
                     await ReplayGameHandler.HandleRequest(user, receivedPacket);
                     break;
+                case GameManagerMessage.cancelMatchmaking:
+                    await CancelMatchmakingHandler.HandleRequest(user, receivedPacket);
+                    break;
                 default:
                     Console.WriteLine($"{gamemanagerMessage} in Gamemanager component is not implemented!");
                     await ServerUtils.SendError(user, receivedPacket, ServerUtils.ErrorCode.ERR_COMMAND_NOT_FOUND);

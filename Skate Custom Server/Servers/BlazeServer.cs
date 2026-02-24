@@ -169,7 +169,7 @@ namespace Servers
 
             if (user.CurrentGame != null)
             {
-                Player player = user.CurrentGame.Players.Where(x => x.PlayerData.PlayerId == user.UserIdentification.BlazeId).First();
+                Player player = user.gamePlayer;
                 await GameManagerUtils.RemoveUserFromGame(player, user.CurrentGame, (int)PlayerRemovedReason.PLAYER_LEFT, true);
             }
 

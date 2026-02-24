@@ -1,7 +1,5 @@
-﻿using Blaze.Components.Gamemanager.Commands;
-using Blaze.Components.Gamemanager.Models;
+﻿using Blaze.Components.Gamemanager.Models;
 using Blaze.Components.Gamemanager.Notifications;
-using Blaze.GamemanagerComponent;
 using Blaze.MessageLists;
 using Servers;
 using Servers.Blaze.Models;
@@ -24,8 +22,8 @@ namespace Blaze.Components.Gamemanager.Handlers
             game.GameData.GameState = (int)GameState.PRE_GAME;
             game.Players[0].PlayerData.PlayerState = (int)PlayerState.ACTIVE_CONNECTED;
 
-            await ServerUtils.SendNotificationToPlayers(
-                game,
+            await ServerUtils.SendNotificationToUser(
+                user,
                 new NotifyGameStateChanged
                 {
                     GameState = (int)GameState.PRE_GAME,
