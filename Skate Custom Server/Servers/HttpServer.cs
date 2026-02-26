@@ -10,10 +10,12 @@ namespace Servers
         private CancellationTokenSource? _cts;
         private HttpListener? _listener;
         private Task _serverTask;
+        private QoSServer _qosServerInstance;
 
-        public HttpServer(ushort port)
+        public HttpServer(ushort port, QoSServer qosServerInstance)
         {
             _port = port;
+            _qosServerInstance = qosServerInstance;
         }
 
         public void Start()
@@ -63,6 +65,9 @@ namespace Servers
                 // Craft a qos xml response based on qtyp
                 if (path == "/qos/qos")
                 {
+                    IPAddress clientIp = req.RemoteEndPoint.Address;
+                    _qosServerInstance.AllowIp(clientIp, seconds: 8);
+
                     string qtyp = req.QueryString["qtyp"];
 
                     bool isQos2 = qtyp == "2";
@@ -95,12 +100,25 @@ namespace Servers
                     continue;
                 }
 
-                string filePath = Path.Combine("wwwroot", path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                string basePath = AppDomain.CurrentDomain.BaseDirectory;
+                string filePath = Path.Combine(basePath, "wwwroot", path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
 
-                if (System.IO.File.Exists(filePath))
+                if (File.Exists(filePath))
                 {
-                    byte[] data = await System.IO.File.ReadAllBytesAsync(filePath, ct);
-                    res.ContentType = "text/xml";
+                    byte[] data = await File.ReadAllBytesAsync(filePath, ct);
+
+                    // Set content type based on file extension
+                    string ext = Path.GetExtension(filePath).ToLower();
+                    res.ContentType = ext switch
+                    {
+                        ".xml" => "text/xml",
+                        ".html" or ".htm" => "text/html",
+                        ".jpg" or ".jpeg" => "image/jpeg",
+                        ".png" => "image/png",
+                        ".psg" => "application/octet-stream",
+                        _ => "application/octet-stream"
+                    };
+
                     res.ContentLength64 = data.Length;
                     await res.OutputStream.WriteAsync(data, 0, data.Length, ct);
                 }

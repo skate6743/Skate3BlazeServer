@@ -19,7 +19,7 @@ namespace Blaze.Components.Gamemanager.Handlers
 
             var request = BlazeMessage.CreateModelFromRequest<MigrateHostRequest>(packetBytes);
 
-            await GameManagerUtils.AssignNewHost(game, game.HostId, request.NewHostPlayer);
+            await GameManagerUtils.AssignNewHost(game, game.HostId, request.NewHostId);
         }
     }
 }

@@ -20,6 +20,10 @@
 		<InactiveCountThreshold>2</InactiveCountThreshold>
 		<DeathRaceInactiveThreshold>60.0</DeathRaceInactiveThreshold>
 	</GameSettings>
+	<GamePlaySettings>
+		<SlowDownFactor>0.0001</SlowDownFactor>
+		<SpeedUpFactor>1</SpeedUpFactor>
+	</GamePlaySettings>
 	<MatchmakingSettings>
 		<AllowDLC>false</AllowDLC>
 		<BypassDirtyCast>false</BypassDirtyCast>

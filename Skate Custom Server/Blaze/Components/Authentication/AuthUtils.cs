@@ -14,9 +14,12 @@ namespace Blaze.Components.Authentication
 
             string displayName = ps3Ticket.Username;
 
-            if (File.Exists("spoofed_usernames.json"))
+            string basePath = AppDomain.CurrentDomain.BaseDirectory;
+            string usernamesPath = Path.Combine(basePath, "spoofed_usernames.json");
+
+            if (File.Exists(usernamesPath))
             {
-                string usernamesJson = File.ReadAllText("spoofed_usernames.json");
+                string usernamesJson = File.ReadAllText(usernamesPath);
                 var nameSpoofs = JsonConvert.DeserializeObject<Dictionary<string, string>>(usernamesJson);
 
                 if (nameSpoofs != null)

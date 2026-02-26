@@ -25,6 +25,7 @@ namespace Blaze.Components.Authentication
             }
 
 			Console.WriteLine($"RPCN user {ps3Ticket.Username} has signed in!");
+            ServerLogger.LogSignIn(ps3Ticket.Username);
 
 			SessionDetails sessionDetails = AuthUtils.CreateNewSessionDetails(ps3Ticket);
 

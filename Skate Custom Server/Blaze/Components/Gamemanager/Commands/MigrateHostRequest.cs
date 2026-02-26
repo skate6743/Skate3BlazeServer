@@ -7,7 +7,7 @@ namespace Blaze.Components.Gamemanager.Commands
         [TdfMember("GID")]
         public uint GameId;
 
-        [TdfMember("HOST")]
-        public uint NewHostPlayer;
+        [TdfMember("PID")]
+        public uint NewHostId;
     }
 }

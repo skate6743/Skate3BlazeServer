@@ -64,7 +64,7 @@ namespace Servers
 
         private async Task HandleClient(TcpClient client)
         {
-            Console.WriteLine($"\nNew client connected!\n");
+            Console.WriteLine($"\nNew client connected from IP {client.Client.RemoteEndPoint}!\n");
             using (client)
             {
                 const int headerLength = 0x0C;

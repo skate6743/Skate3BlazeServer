@@ -30,7 +30,7 @@ var qosServer = new QoSServer(ServerGlobals.ServerPort);
 qosServer.Start();
 
 // Start HTTP server used for mandatory stuff like config .xml during login flow (found in wwwroot folder)
-var httpServer = new HttpServer(ServerGlobals.HttpServerPort);
+var httpServer = new HttpServer(ServerGlobals.HttpServerPort, qosServer);
 httpServer.Start();
 
 // Main Blaze server

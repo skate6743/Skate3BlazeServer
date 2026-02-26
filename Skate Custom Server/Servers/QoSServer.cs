@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 
 namespace Servers
@@ -9,6 +10,22 @@ namespace Servers
         private CancellationTokenSource? _cts;
         private UdpClient? _udpClient;
         private Task _serverTask;
+        private readonly ConcurrentDictionary<IPAddress, DateTime> _allowedIps = new();
+
+        public void AllowIp(IPAddress ip, int seconds = 10)
+        {
+            _allowedIps[ip] = DateTime.UtcNow.AddSeconds(seconds);
+        }
+
+        private bool IsAllowed(IPAddress ip)
+        {
+            if (_allowedIps.TryGetValue(ip, out var expiry))
+            {
+                if (DateTime.UtcNow < expiry) return true;
+                _allowedIps.TryRemove(ip, out _);
+            }
+            return false;
+        }
 
         public QoSServer(ushort port)
         {
@@ -52,6 +69,9 @@ namespace Servers
         {
             try
             {
+                if (!IsAllowed(result.RemoteEndPoint.Address))
+                    return;
+
                 var buf = result.Buffer;
                 if (buf.Length < 0x20 && result.RemoteEndPoint is IPEndPoint { Address.AddressFamily: AddressFamily.InterNetwork } ep)
                 {
@@ -74,7 +94,7 @@ namespace Servers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+
             }
         }
     }

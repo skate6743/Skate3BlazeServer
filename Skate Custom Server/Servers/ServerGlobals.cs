@@ -11,7 +11,7 @@ namespace Servers
         public static ushort HttpServerPort = 80;
         public static uint PingPeriodSecs = 20;
         public static uint QoSProbes = 5;
-        public static uint QoSProbeSize = 1000;
+        public static uint QoSProbeSize = 150;
 
         public static ConcurrentDictionary<uint, User> Users = new ConcurrentDictionary<uint, User>();
         public static ConcurrentDictionary<uint, Game> Games = new ConcurrentDictionary<uint, Game>();
