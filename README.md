@@ -33,5 +33,7 @@ Take your Radmin IP (26.x.x.x), and in the settings.json set LocalHost to true a
 
 [NPTicket](https://github.com/LittleBigRefresh/NPTicket) by [LittleBigRefresh Team](https://github.com/LittleBigRefresh) (Used for RPCN ticket validation)
 
+[BWKingsnake](https://github.com/bwkingsnake) for making the Skate 3 Online Config Tool for automating setting all needed config options.
+
 # Disclaimer
 Not affiliated, associated, authorized, endorsed by, or in any way officially connected with Electronic Arts Inc. or any of its subsidiaries or affiliates. The use of any trademarks, logos, or brand names is for identification purposes only and does not imply endorsement or affiliation.
