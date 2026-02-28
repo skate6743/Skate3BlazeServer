@@ -2,20 +2,19 @@
 Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Skate web features such as Import Skaters, Parks, etc. will be implemented eventually too :)
 
 # Joining Our Public Server
-## Automated setup (Recommended for Windows):
+### Automated setup (Recommended for Windows):
 1. Open RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version. After updating just close out of RPCS3.
 2. Download this tool which auto adjusts your config with the right online related settings: [Skate 3 Config Adjuster by BWKingsnake](https://github.com/bwkingsnake/rpcs3-skate-3-config-editor/releases/download/configEditor/Release.7z)
 3. Run the "configEditor.exe" file inside that archive and locate to your rpcs3.exe path when it asks. After this you can close out of the configEditor.
 4. Open your RPCS3, click on the "RPCN" icon (right next to pads settings), and go to Account->Create Account if you don't have one already. You will need to fully go through the account creation process with verifying your email, etc.
 5. Now you can boot Skate 3 and connect to EA Nation
-## Manual setup (Recommended for Linux):
+### Manual setup (Recommended for Linux):
 1. testing
    
 # Manual Hosting Guide
-For those of you who don't want to join our public server and want to host locally for playing with friends, this guide is for you.
-## Hosting publicly
+### Hosting publicly
 Forward port 42100 for both UDP and TCP, and port 80 for TCP. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com==YOURIPHERE&&downloads.skate.online.ea.com==YOURIPHERE"
-## Playing locally with friends using Radmin VPN
+### Playing locally with friends using Radmin VPN
 Take your Radmin IP (26.x.x.x), and in the settings.json set LocalHost to true and LocalIPAddress to your Radmin IP. Now run the server executable and you and your friends must set their IP/Hosts switches in Network tab to "gosredirector.ea.com==YourRadminIPhere&&downloads.skate.online.ea.com==YourRadminIPhere" (Everyone sets their config to your Radmin IP since you are the one hosting the server!)
 # Special Thanks
 [@Aim4Kill](https://github.com/Aim4kill) for making the [BlazeSDK](https://github.com/Aim4kill/BlazeSDK) (Saved so much time with having the packet structures there for almost all Blaze commands)
