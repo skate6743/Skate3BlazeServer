@@ -2,6 +2,18 @@
 Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Skate web features such as Import Skaters, Parks, etc. will be implemented eventually too :)
 
 ## Setup Guide
+### Joining our public server:
+Automated setup (Recommended for Windows):
+
+1. Open RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version. After updating just close out of RPCS3.
+2. Download this tool which auto adjusts your config with the right online related settings: [Skate 3 Config Adjuster by BWKingsnake](https://github.com/bwkingsnake/rpcs3-skate-3-config-editor/releases/download/configEditor/Release.7z)
+3. Run the "configEditor.exe" file inside that archive and locate to your rpcs3.exe path when it asks. After this you can close out of the configEditor.
+4. Open your RPCS3, click on the "RPCN" icon (right next to pads settings), and go to Account->Create Account if you don't have one already. You will need to fully go through the account creation process with verifying your email, etc.
+5. Now you can boot Skate 3 and connect to EA Nation
+
+
+Manual setup (Recommended for Linux):
+1. testing
 ### Testing locally:
 Set IP/Hosts switches in Network config to gosredirector.ea.com==127.0.0.1&&downloads.skate.online.ea.com==127.0.0.1
 
