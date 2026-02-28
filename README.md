@@ -1,8 +1,7 @@
 # Skate 3 Custom Blaze Server
 Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Skate web features such as Import Skaters, Parks, etc. will be implemented eventually too :)
 
-# Setup Guide
-## Joining our public server:
+# Joining Our Public Server
 ## Automated setup (Recommended for Windows):
 1. Open RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version. After updating just close out of RPCS3.
 2. Download this tool which auto adjusts your config with the right online related settings: [Skate 3 Config Adjuster by BWKingsnake](https://github.com/bwkingsnake/rpcs3-skate-3-config-editor/releases/download/configEditor/Release.7z)
@@ -12,6 +11,10 @@ Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Ska
 ## Manual setup (Recommended for Linux):
 1. testing
    
+# Manual Hosting Guide
+For those of you who don't want to join our public server and want to host locally for playing with friends, this guide is for you.
+## Hosting and playing on Radmin VPN
+Take your Radmin IP (26.x.x.x), and in the settings.json set LocalHost to true and LocalIPAddress to your Radmin IP. Now run the server executable and you and your friends must set their IP/Hosts switches in Network tab to "gosredirector.ea.com==YourRadminIPhere&&downloads.skate.online.ea.com==YourRadminIPhere" (Everyone sets their config to your Radmin IP since you are the one hosting the server!)
 ## Playing locally with friends via Radmin VPN:
 Take your Radmin IP (26.x.x.x), and in the settings.json set LocalHost to true and LocalIPAddress to your Radmin IP. Lastly you and your friends must set their IP/Hosts switches in  Network tab to "gosredirector.ea.com==RadminIPhere&&downloads.skate.online.ea.com==RadminIPhere"
 
