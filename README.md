@@ -9,7 +9,14 @@ Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Ska
 4. Open your RPCS3, click on the "RPCN" icon (right next to pads settings), and go to Account->Create Account if you don't have one already. You will need to fully go through the account creation process with verifying your email, etc.
 5. Now you can boot Skate 3 and connect to EA Nation
 ### Manual setup (Recommended for Linux):
-1. testing
+1. Open RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version.
+2. On RPCS3 right click on Skate 3, and click on "Change Custom Configuration" (if you have not made one yet, click on "Create Custom Configuration")
+3. Head over to the CPU tab on the custom config, and set "XFloat Accuracy" to "Approximate", and make sure "Enable SPU loop detection" is unticked.
+4. Go to Network tab, and set Network Status to Connected, PSN Status to RPCN, turn UPNP on at the bottom.
+5. For the IP/Hosts switches field, paste in this: gosredirector.ea.com==172.237.109.212&&downloads.skate.online.ea.com==172.237.109.212
+6. Save custom configuration and exit this config editor window.
+7. Click on the "RPCN" icon (right next to pads settings), and go to Account->Create Account if you don't have one already. You will need to fully go through the account creation process with verifying your email, etc.
+8. Now you can boot Skate 3 and connect to EA Nation
    
 # Manual Hosting Guide
 ### Hosting publicly
