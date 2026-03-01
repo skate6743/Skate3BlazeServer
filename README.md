@@ -3,6 +3,8 @@ Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Ska
 
 # Joining Our Public Server
 Before proceeding with these instructions, if you are someone that plays on the Party Play EBOOT to have your own skater in Party Play, please download and install this [Original EBOOT](https://www.mediafire.com/file/jdwv2z1k49wwu6v/EBOOT.BIN/file) to RPCS3/dev_hdd0/game/BLUS30464 (or BLES00760 for BLES)/USRDIR. If you don't know what the Party Play EBOOT is then you can skip this step!
+### Video Guides:
+[Windows Guide](https://www.youtube.com/watch?v=i5fHEhsqzA4)
 ### Automated setup (Recommended for Windows):
 1. Open RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version. After updating just close out of RPCS3.
 2. Download this tool which auto adjusts your config with the right online related settings: [Skate 3 Config Adjuster by BWKingsnake](https://github.com/bwkingsnake/rpcs3-skate-3-config-editor/releases/download/configEditor/Release.7z)
