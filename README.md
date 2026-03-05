@@ -1,6 +1,10 @@
 # Skate 3 Custom Blaze Server
 Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Skate web features such as Import Skaters, Parks, etc. will be implemented eventually too :)
 
+# Features
+* Functional matchmaking and player invites from friends list ingame
+* Relay servers for each lobby (no Peer to Peer connections between players)
+
 # Joining Our Public Server
 Before proceeding with these instructions, if you are someone that plays on the Party Play EBOOT to have your own skater in Party Play, please download and install this [Original EBOOT](https://www.mediafire.com/file/jdwv2z1k49wwu6v/EBOOT.BIN/file) to RPCS3/dev_hdd0/game/BLUS30464 (or BLES00760 for BLES)/USRDIR. If you don't know what the Party Play EBOOT is then you can skip this step!
 ### Automated setup (Recommended for Windows):
@@ -35,7 +39,7 @@ Before proceeding with these instructions, please download the [Compiled Server 
 9. In settings.json of the server files, set LocalHost to true and the LocalIPAddress to your Radmin IP.
 10. Run the server, now you and your friends can boot up Skate 3 and sign into EA Nation.
 ### Hosting publicly
-Forward port 42100 for both UDP and TCP, and port 80 for TCP. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com==YourPublicIPHere&&downloads.skate.online.ea.com==YourPublicIPHere"
+Forward port 42100 for both UDP and TCP, and port 80 for TCP, and lastly range 17000-18000 in UDP for relay servers used in lobbies. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com==YourPublicIPHere&&downloads.skate.online.ea.com==YourPublicIPHere"
 # Special Thanks
 [@Aim4Kill](https://github.com/Aim4kill) for making the [BlazeSDK](https://github.com/Aim4kill/BlazeSDK) (Saved so much time with having the packet structures there for almost all Blaze commands)
 
