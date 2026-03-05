@@ -39,7 +39,7 @@ Before proceeding with these instructions, please download the [Compiled Server 
 9. In settings.json of the server files, set LocalHost to true and the LocalIPAddress to your Radmin IP.
 10. Run the server, now you and your friends can boot up Skate 3 and sign into EA Nation.
 ### Hosting publicly
-Forward port 42100 for both UDP and TCP, and port 80 for TCP, and lastly range 17000-18000 in UDP for relay servers used in lobbies. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com==YourPublicIPHere&&downloads.skate.online.ea.com==YourPublicIPHere"
+Forward port 42100 for both UDP and TCP, and port 80 for TCP, and lastly range 17000-17500 for UDP for relay servers used in lobbies. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com==YourPublicIPHere&&downloads.skate.online.ea.com==YourPublicIPHere"
 # Special Thanks
 [@Aim4Kill](https://github.com/Aim4kill) for making the [BlazeSDK](https://github.com/Aim4kill/BlazeSDK) (Saved so much time with having the packet structures there for almost all Blaze commands)
 
