@@ -12,7 +12,7 @@ namespace Blaze.Components.UserSessions.Handlers
         public static async Task HandleRequest(User user, byte[] packetBytes)
         {
             var request = BlazeMessage.CreateModelFromRequest<UpdateNetworkInfoRequest>(packetBytes);
-
+            request.QosData.NatType = (int)NatType.NAT_TYPE_OPEN;
             user.ExtendedData.NetworkAddress = request.NetworkAddress;
             user.ExtendedData.QosData = request.QosData;
 

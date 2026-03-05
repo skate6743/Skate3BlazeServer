@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using NPTicket;
 using Servers;
-using System.Net;
 
 namespace Blaze.Components.Authentication
 {
@@ -30,6 +29,8 @@ namespace Blaze.Components.Authentication
                     }
                 }
             }
+
+            displayName = displayName.Replace("{lightning}", "»").Replace("{skate}", "«");
 
             var session = new SessionDetails
             {

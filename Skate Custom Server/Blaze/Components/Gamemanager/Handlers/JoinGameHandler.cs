@@ -23,7 +23,7 @@ namespace Blaze.Components.Gamemanager.Handlers
                 packetBytes,
                 new JoinGameResponse {
                     GameId = gameId,
-                    JGS = 0 // Not sure what JGS is for, but it's in joinGame responses
+                    JGS = 0 // Not sure what JGS means, but it's in joinGame responses
                 });
 
             await matchmaker.Stream.WriteAsync(response.Serialize());

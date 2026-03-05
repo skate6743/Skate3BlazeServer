@@ -21,7 +21,7 @@ namespace Blaze.Components.Gamemanager.Handlers
 
             var request = BlazeMessage.CreateModelFromRequest<SetGameSettingsRequest>(packetBytes);
             game.GameData.GameSettings = request.GameSettings;
-
+            
             await ServerUtils.SendNotificationToPlayers(
                 game,
                 new NotifyGameSettingsChanged

@@ -3,9 +3,11 @@ using Blaze.Components.Gamemanager;
 using Blaze.Components.Gamemanager.Models;
 using Blaze.Components.Redirector.Handlers;
 using Blaze.MessageLists;
+using Org.BouncyCastle.Asn1.X509;
 using Servers.Blaze.Models;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 
 namespace Servers
 {
@@ -64,7 +66,6 @@ namespace Servers
 
         private async Task HandleClient(TcpClient client)
         {
-            Console.WriteLine($"\nNew client connected from IP {client.Client.RemoteEndPoint}!\n");
             using (client)
             {
                 const int headerLength = 0x0C;
@@ -72,7 +73,11 @@ namespace Servers
                 byte[] buffer = new byte[4096];
                 int bytesRead;
                 var accumulated = new List<byte>();
-                var user = new User { Stream = clientStream };
+                var user = new User
+                {
+                    Stream = clientStream,
+                };
+
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ServerGlobals.PingPeriodSecs + 3));
                 try
                 {
@@ -81,12 +86,20 @@ namespace Servers
                         cts.Dispose();
                         cts = new CancellationTokenSource(TimeSpan.FromSeconds(ServerGlobals.PingPeriodSecs + 3));
                         accumulated.AddRange(buffer.AsSpan(0, bytesRead).ToArray());
+
+                        // Limit first packet to only be allowed to be Util component
+                        if (!user.HasSentPreAuth && (accumulated.Count < 8 || (accumulated[3] != 5 && accumulated[3] != 9)))
+                            cts.Cancel();
+
+                        user.HasSentPreAuth = true;
+
                         while (true)
                         {
                             if (accumulated.Count < headerLength)
                                 break;
 
                             ushort bodyLength = (ushort)((accumulated[0] << 8) | accumulated[1]);
+
                             int fullPacketSize = headerLength + bodyLength;
 
                             if (accumulated.Count < fullPacketSize)
@@ -118,16 +131,11 @@ namespace Servers
                 (BlazeComponent)TdfUtils.GetComponentFromPacket(packetBytes);
 
             // Restrict access to some components until authenticated with proper RPCN ticket
-            if (!user.Authenticated &&
+            if (!user.IsAuthenticated &&
                 component != BlazeComponent.Util &&
                 component != BlazeComponent.Authentication &&
                 component != BlazeComponent.Redirector)
             {
-                await ServerUtils.SendError(
-                    user,
-                    packetBytes,
-                    ServerUtils.ErrorCode.ERR_AUTHENTICATION_REQUIRED);
-
                 return;
             }
 
@@ -165,16 +173,16 @@ namespace Servers
 
         private async Task HandleClientDisconnected(User user)
         {
-            Console.WriteLine($"Handle client disconnected called for {user.UserIdentification.Name}");
-
-            if (user.CurrentGame != null)
+            if (user.IsAuthenticated)
             {
-                Player player = user.gamePlayer;
-                await GameManagerUtils.RemoveUserFromGame(player, user.CurrentGame, (int)PlayerRemovedReason.PLAYER_LEFT, true);
-            }
+                if (user.CurrentGame != null)
+                {
+                    Player player = user.gamePlayer;
+                    await GameManagerUtils.RemoveUserFromGame(player, user.CurrentGame, (int)PlayerRemovedReason.PLAYER_LEFT);
+                }
 
-            if (user.Authenticated)
                 ServerGlobals.Users.TryRemove(user.Session.BlazeId, out _);
+            }
         }
     }
 }

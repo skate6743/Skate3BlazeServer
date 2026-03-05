@@ -5,9 +5,9 @@ namespace Blaze.Components.UserSessions.Models
     public struct NetworkAddress
     {
         [TdfUnionCase(2)]
-        public IpPairAddress? IpPairAddress;
+        public IpPairAddress? IpPairAddress; // Used by actual players
 
         [TdfUnionCase(3)]
-        public IpAddress? IpAddress;
+        public IpAddress? IpAddress; // Used for dirtycast servers
     }
 }

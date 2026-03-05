@@ -2,8 +2,9 @@
 using Blaze.Components.UserSessions.Models;
 using Blaze.GamemanagerComponent;
 using Blaze.MessageLists;
-using Servers.Blaze.Models;
 using Servers;
+using Servers.Blaze.Models;
+using System.Net;
 
 namespace Blaze.Components.Gamemanager
 {
@@ -24,8 +25,8 @@ namespace Blaze.Components.Gamemanager
                 }
                 await Task.Delay(100);
             }
-            uint gameId = game.GameData.GameId;
 
+            uint gameId = game.GameData.GameId;
 
             ReplicatedGamePlayer replicatedPlayer = CreateReplicatedGamePlayer(matchmaker, game);
 
@@ -38,8 +39,28 @@ namespace Blaze.Components.Gamemanager
             List<Player> snapshot;
             lock (game.Lock)
             {
+                if (game.Players.Count >= 6)
+                {
+                    _ = ServerUtils.SendNotificationToUser(
+                        matchmaker,
+                        new NotifyMatchmakingFinished
+                        {
+                            Fit = 100,
+                            MaxFit = 100,
+                            GameId = 0, // Sending 0 makes the game redirect to createGame command for making lobby
+                            MatchmakingResult = (int)MatchmakingResult.SESSION_ERROR_GAME_SETUP_FAILED,
+                            MatchmakingSessionId = 123
+                        },
+                        BlazeComponent.Gamemanager,
+                        (ushort)GameManagerNotifications.NotifyMatchmakingFinished);
+
+                    return;
+                }
+
                 game.Players.Add(newPlayer);
                 snapshot = game.Players.ToList();
+                game.AcceptingRelayConnections = true;
+                _ = ConfirmPlayerConnectivity(matchmaker);
             }
             
             // Notify matchmaker to join new game
@@ -103,7 +124,7 @@ namespace Blaze.Components.Gamemanager
             {
                 if (game.Players.Count > 0)
                 {
-                    for (byte slot = 0; slot <= 5; slot++)
+                    for (byte slot = 1; slot <= 6; slot++)
                     {
                         if (!game.Players.Any(x => x.PlayerData.SlotId == slot))
                             return slot;
@@ -111,10 +132,23 @@ namespace Blaze.Components.Gamemanager
                 }
             }
 
-            return 0;
+            return 1;
         }
 
-        public static ReplicatedGamePlayer CreateReplicatedGamePlayer(User user, Game game)
+        public static async Task ConfirmPlayerConnectivity(User user)
+        {
+            await Task.Delay(20000);
+
+            if (user.gamePlayer != null && user.CurrentGame != null)
+            {
+                if (user.gamePlayer.PlayerData.PlayerState == (int)PlayerState.ACTIVE_CONNECTING)
+                    await RemoveUserFromGame(user.gamePlayer, user.CurrentGame, (int)PlayerRemovedReason.PLAYER_CONN_LOST);
+            }
+
+            return;
+        }
+
+        public static ReplicatedGamePlayer CreateReplicatedGamePlayer(User user, Game game, bool creatingGame = false)
         {
             long epochMicroseconds =
             (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000) +
@@ -130,10 +164,10 @@ namespace Blaze.Components.Gamemanager
                 NetworkQosData = user.ExtendedData.QosData,
                 PlayerAttributes = new Dictionary<string, string> { { "dlc_mask", "499" } },
                 PlayerId = user.Session.BlazeId,
-                PlayerNetwork = user.ExtendedData.NetworkAddress,
+                PlayerNetwork = new NetworkAddress { }, // Empty NetworkAddress union to force Dirtycast connection
                 SlotId = slotId,
                 SlotType = 0,
-                PlayerState = (int)PlayerState.ACTIVE_CONNECTING,
+                PlayerState = creatingGame ? (int)PlayerState.ACTIVE_CONNECTED : (int)PlayerState.ACTIVE_CONNECTING,
                 Team = 0xFFFF,
                 TeamIndex = 0xFFFF,
                 JoinDate = epochMicroseconds
@@ -165,15 +199,12 @@ namespace Blaze.Components.Gamemanager
                     PlayerId = newHostId,
                     SlotId = newHostSlot
                 };
-                game.GameData.PlatformHost = hostInfo;
-                game.GameData.TopologyHost = hostInfo;
 
-                game.GameData.AdminPlayerList = new List<uint> { newHostId };
+                game.GameData.PlatformHost = hostInfo;
+
+                game.GameData.AdminPlayerList = new List<uint> { 123, newHostId };
 
                 game.HostId = newHost.PlayerData.PlayerId;
-
-                var networkAddress = newHost.UserData.ExtendedData.NetworkAddress;
-                game.GameData.HostConnections = new List<NetworkAddress> { networkAddress };
 
                 // Notify all players in lobby about host migration
                 await ServerUtils.SendNotificationToPlayers(
@@ -190,7 +221,7 @@ namespace Blaze.Components.Gamemanager
             }
         }
 
-        public static async Task RemoveUserFromGame(Player playerToRemove, Game game, int removeReason, bool removedFromDisconnect = false)
+        public static async Task RemoveUserFromGame(Player playerToRemove, Game game, int removeReason)
         {
             if (playerToRemove.UserData.CurrentGame == game)
             {
@@ -208,41 +239,47 @@ namespace Blaze.Components.Gamemanager
                     RemovalReason = removeReason
                 };
 
-                if (!removedFromDisconnect)
-                {
-                    await ServerUtils.SendNotificationToUser(
-                        userData,
-                        playerRemovedNotification,
-                        BlazeComponent.Gamemanager,
-                        (ushort)GameManagerNotifications.NotifyPlayerRemoved);
-                }
+                List<Player> snapshot;
 
                 lock (game.Lock)
                 {
+                    snapshot = game.Players.ToList();
                     game.Players.Remove(playerToRemove);
 
                     // If lobby has no players left Remove it
                     if (game.Players.Count == 0)
                     {
+                        _= ServerUtils.SendNotificationToUser(
+                            playerToRemove.UserData,
+                            playerRemovedNotification,
+                            BlazeComponent.Gamemanager,
+                            (ushort)GameManagerNotifications.NotifyPlayerRemoved);
+
+                        // Destroy lobby relay server
+                        _= ServerGlobals.LobbyRelayServers[game].StopAsync();
+                        ServerGlobals.LobbyRelayServers.TryRemove(game, out _);
                         ServerGlobals.Games.TryRemove(game.GameData.GameId, out _);
+
                         playerToRemove.UserData.CurrentGame = null;
                         playerToRemove.UserData.gamePlayer = null;
-                        Console.WriteLine($"{game.GameData.GameId} lobby has been destroyed due to no players!");
                         return;
                     }
                 }
-                
+
                 // If player was host and left then migrate host
                 if (hostId == userBlazeId)
                 {
                     await AssignNewHost(game, playerToRemove.PlayerData.PlayerId);
                 }
 
-                await ServerUtils.SendNotificationToPlayers(
-                    game,
+                foreach (Player player in snapshot)
+                {
+                    await ServerUtils.SendNotificationToUser(
+                    player.UserData,
                     playerRemovedNotification,
                     BlazeComponent.Gamemanager,
                     (ushort)GameManagerNotifications.NotifyPlayerRemoved);
+                }
             }
 
             playerToRemove.UserData.CurrentGame = null;

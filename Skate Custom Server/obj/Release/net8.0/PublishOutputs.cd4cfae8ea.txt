@@ -1,0 +1,7 @@
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\publish\Skate Custom Server.exe
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\publish\Skate Custom Server.dll
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\publish\Skate Custom Server.deps.json
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\publish\Skate Custom Server.runtimeconfig.json
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\publish\Skate Custom Server.pdb
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\publish\BouncyCastle.Cryptography.dll
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\publish\Newtonsoft.Json.dll

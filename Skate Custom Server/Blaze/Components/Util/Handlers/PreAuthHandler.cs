@@ -33,9 +33,8 @@ namespace Blaze.Components.Util.Handlers
                     },
                     QosSettings =
                     {
-                        BandwidthPingSiteInfo = pingSiteInfo,
                         NumLatencyProbes = 0,
-                        PingSiteInfoByAliasMap = new Dictionary<string, QosPingSiteInfo> { { "sjc", pingSiteInfo } }
+                        PingSiteInfoByAliasMap = new Dictionary<string, QosPingSiteInfo> {  }
                     },
                     ServerVersion = "Custom Blaze 2.11.3.1 Server"
                 });

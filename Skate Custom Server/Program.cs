@@ -25,12 +25,8 @@ ServerGlobals.HttpServerPort = 80;
 // Game must send a heartbeat ping request every X seconds or disconnect client
 ServerGlobals.PingPeriodSecs = 20;
 
-// Start QoSServer, a UDP server used during authentication flow for testing network connection
-var qosServer = new QoSServer(ServerGlobals.ServerPort);
-qosServer.Start();
-
 // Start HTTP server used for mandatory stuff like config .xml during login flow (found in wwwroot folder)
-var httpServer = new HttpServer(ServerGlobals.HttpServerPort, qosServer);
+var httpServer = new HttpServer(ServerGlobals.HttpServerPort);
 httpServer.Start();
 
 // Main Blaze server
@@ -55,6 +51,5 @@ catch (OperationCanceledException)
 {
     await blazeServer.StopAsync();
     await httpServer.StopAsync();
-    await qosServer.StopAsync();
     Console.WriteLine("All servers stopped.");
 }

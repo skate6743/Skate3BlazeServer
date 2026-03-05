@@ -1,0 +1,18 @@
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\Skate Custom Server.exe
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\Skate Custom Server.deps.json
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\Skate Custom Server.runtimeconfig.json
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\Skate Custom Server.dll
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\Skate Custom Server.pdb
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\BouncyCastle.Cryptography.dll
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Custom Server.csproj.AssemblyReference.cache
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Custom Server.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Custom Server.AssemblyInfoInputs.cache
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Custom Server.AssemblyInfo.cs
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Custom Server.csproj.CoreCompileInputs.cache
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Cu.17FB5E80.Up2Date
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Custom Server.dll
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\refint\Skate Custom Server.dll
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Custom Server.pdb
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\Skate Custom Server.genruntimeconfig.cache
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\obj\Release\net8.0\ref\Skate Custom Server.dll
+C:\Users\joelr\source\repos\Skate Custom Server\Skate Custom Server\bin\Release\net8.0\Newtonsoft.Json.dll

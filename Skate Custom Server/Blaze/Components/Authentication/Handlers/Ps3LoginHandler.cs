@@ -24,7 +24,6 @@ namespace Blaze.Components.Authentication
                 return;
             }
 
-			Console.WriteLine($"RPCN user {ps3Ticket.Username} has signed in!");
             ServerLogger.LogSignIn(ps3Ticket.Username);
 
 			SessionDetails sessionDetails = AuthUtils.CreateNewSessionDetails(ps3Ticket);
@@ -46,7 +45,18 @@ namespace Blaze.Components.Authentication
             user.ExtendedData = new UserSessionExtendedData
             {
                 BestPingSite = "sjc",
-                DataMap = new Dictionary<uint, uint> { { 458823, 0 } }
+                DataMap = new Dictionary<uint, uint> { { 458823, 0 } },
+                NetworkAddress = new NetworkAddress
+                {
+                    IpPairAddress = new IpPairAddress
+                    {
+                        ExternalIp = new IpAddress
+                        {
+                            IP = 123,
+                            Port = 123
+                        }
+                    }
+                }
             };
 
             user.UserIdentification = new UserIdentification
@@ -59,7 +69,7 @@ namespace Blaze.Components.Authentication
                 PersonaId = user.Session.PersonaDetails.PersonaId
             };
 
-            user.Authenticated = true;
+            user.IsAuthenticated = true;
             ServerGlobals.Users[sessionDetails.BlazeId] = user;
         }
     }

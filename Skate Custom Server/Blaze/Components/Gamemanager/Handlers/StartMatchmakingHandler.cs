@@ -9,14 +9,21 @@ namespace Blaze.Components.Gamemanager.Handlers
 {
     public class StartMatchmakingHandler
     {
-        public static string[] FilteredAttributes = { "is_private", "is_ranked", "challenge_key", "challenge_type" };
+        public static string[] FilteredAttributes = {
+            "is_private",
+            "is_ranked",
+            "challenge_key",
+            "challenge_type",
+            "is_team_challenge",
+            "is_free_skate",
+            "is_coop_challenge",
+            "gameCodeVersion"
+        };
 
         public static async Task HandleRequest(User matchmaker, byte[] packetBytes)
         {
             // Make sure player doesn't have a lobby running already
-            if (matchmaker.CurrentGame != null ||
-                matchmaker.ExtendedData.NetworkAddress.IpPairAddress == null ||
-                matchmaker.ExtendedData.NetworkAddress.IpPairAddress.Value.ExternalIp.IP == 0) // On strict NAT types External IP is usually indicated as 0 in server indicating user can't matchmake
+            if (matchmaker.CurrentGame != null)
             {
                 await ServerUtils.SendError(matchmaker, packetBytes, ServerUtils.ErrorCode.GAMEMANAGER_ERR_PERMISSION_DENIED);
                 return;
@@ -34,7 +41,7 @@ namespace Blaze.Components.Gamemanager.Handlers
             var request = BlazeMessage.CreateModelFromRequest<StartMatchmakingRequest>(packetBytes);
 
             var wantedAttributes = request.MatchmakingAttributes;
-            
+
             foreach (var kv in ServerGlobals.Games)
             {
                 Game game = kv.Value;

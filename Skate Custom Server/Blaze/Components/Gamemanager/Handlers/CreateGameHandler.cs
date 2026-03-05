@@ -4,6 +4,8 @@ using Servers;
 using Blaze.GamemanagerComponent;
 using Servers.Blaze.Models;
 using Blaze.MessageLists;
+using Blaze.Components.UserSessions.Models;
+using System.Net;
 
 namespace Blaze.Components.Gamemanager.Handlers
 {
@@ -35,16 +37,13 @@ namespace Blaze.Components.Gamemanager.Handlers
         public static async Task HandleRequest(User creator, byte[] packetBytes)
         {
             // Make sure player doesn't have a lobby running already
-            if (creator.CurrentGame != null ||
-                creator.ExtendedData.NetworkAddress.IpPairAddress == null ||
-                creator.ExtendedData.NetworkAddress.IpPairAddress.Value.ExternalIp.IP == 0) // On strict NAT types External IP is usually indicated as 0 in server indicating user can't matchmake
+            if (creator.CurrentGame != null)
             {
                 await ServerUtils.SendError(creator, packetBytes, ServerUtils.ErrorCode.GAMEMANAGER_ERR_PERMISSION_DENIED);
                 return;
             }
 
             uint gameId = (uint)ServerGlobals.GetNextGameId();
-            Console.WriteLine($"Creating game with gameId {gameId}");
 
             var request = BlazeMessage.CreateModelFromRequest<CreateGameRequest>(packetBytes);
 
@@ -56,12 +55,6 @@ namespace Blaze.Components.Gamemanager.Handlers
                 });
 
             await creator.Stream.WriteAsync(response.Serialize());
-
-            var hostInfo = new HostInfo
-            {
-                PlayerId = creator.Session.BlazeId,
-                SlotId = 0
-            };
 
             var filteredAttributes = new Dictionary<string, string>();
             if (request.GameAttributes.Count <= _validKeys.Length)
@@ -75,33 +68,49 @@ namespace Blaze.Components.Gamemanager.Handlers
                 }
             }
 
+            var platformHostInfo = new HostInfo
+            {
+                PlayerId = creator.Session.BlazeId,
+                SlotId = 1
+            };
+
+            var topologyHostInfo = new HostInfo
+            {
+                PlayerId = 123,
+                SlotId = 0
+            };
+
+            var game = new Game();
+
+            // Reserve and start Dirtycast server for lobby
+            var hostNetworkAddress = ServerUtils.ReserveLobbyRelayServer(game, Convert.ToUInt16(17000 + gameId));
+
             var replicatedGameData = new ReplicatedGameData
             {
-                AdminPlayerList = new List<uint> { creator.Session.BlazeId },
+                AdminPlayerList = new List<uint> { 123, creator.Session.BlazeId },
                 GameAttributes = filteredAttributes,
                 SlotCapacities = new List<ushort> { 6, 0 },
                 GameId = gameId,
                 GameName = creator.UserIdentification.Name,
                 GameSettings = request.GameSettings,
                 GameState = (int)GameState.INITIALIZING,
-                HostConnections = request.HostConnections,
+                HostConnections = new List<NetworkAddress> { hostNetworkAddress },
                 TopologyHostSessionId = Convert.ToUInt32(creator.Session.UserId),
                 MaxPlayerCapacities = 6,
                 NetworkQosData = creator.ExtendedData.QosData,
-                NetworkTopology = (int)GameNetworkTopology.PEER_TO_PEER_FULL_MESH,
+                NetworkTopology = (int)GameNetworkTopology.PEER_TO_PEER_DIRTYCAST_FAILOVER,
                 PersistedGameId = request.PersistedGameId,
                 PersistedGameIdSecret = request.PersistedGameIdSecret,
-                TopologyHost = hostInfo,
-                PlatformHost = hostInfo,
+                TopologyHost = topologyHostInfo,
+                PlatformHost = platformHostInfo,
                 QueueCapacity = request.QueueCapacity,
-                VoipTopology = (int)VoipTopology.VOIP_PEER_TO_PEER,
+                VoipTopology = (int)VoipTopology.VOIP_DISABLED,
                 GameProtocolVersionString = request.GameProtocolVersionString
             };
 
-            var game = new Game();
             game.GameData = replicatedGameData;
 
-            ReplicatedGamePlayer playerData = GameManagerUtils.CreateReplicatedGamePlayer(creator, game);
+            ReplicatedGamePlayer playerData = GameManagerUtils.CreateReplicatedGamePlayer(creator, game, true);
             var player = new Player
             {
                 PlayerData = playerData,

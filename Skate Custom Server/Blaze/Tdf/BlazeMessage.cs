@@ -112,7 +112,7 @@ namespace Blaze
                 TdfType.UInt32 => BitConverter.ToUInt32(TdfUtils.SwapEndianess(bytes), 0),
                 TdfType.Int64 => BitConverter.ToInt64(TdfUtils.SwapEndianess(bytes), 0),
                 TdfType.UInt64 => BitConverter.ToUInt64(TdfUtils.SwapEndianess(bytes), 0),
-                TdfType.String => Encoding.ASCII.GetString(bytes).Replace("\0", ""),
+                TdfType.String => Encoding.Latin1.GetString(bytes).Replace("\0", ""),
                 TdfType.Blob => bytes,
                 _ => throw new NotSupportedException($"Primitive deserialize not supported for type: {type}"),
             };
@@ -134,9 +134,9 @@ namespace Blaze
         private static byte[] SerializeString(string s)
         {
             s ??= string.Empty;
-            int len = Encoding.ASCII.GetByteCount(s);
+            int len = Encoding.Latin1.GetByteCount(s);
             var bytes = new byte[len + 1]; // null-terminated
-            Encoding.ASCII.GetBytes(s, 0, s.Length, bytes, 0);
+            Encoding.Latin1.GetBytes(s, 0, s.Length, bytes, 0);
             return bytes;
         }
 
@@ -291,7 +291,7 @@ namespace Blaze
                         string s = element as string
                             ?? throw new InvalidOperationException("Array string element must be a string.");
 
-                        byte[] strBytes = Encoding.ASCII.GetBytes(s);
+                        byte[] strBytes = Encoding.Latin1.GetBytes(s);
                         if (strBytes.Length > 255)
                             throw new NotSupportedException("Array string element too long (>255).");
 
@@ -558,7 +558,7 @@ namespace Blaze
                     break;
 
                 case TdfType.String:
-                    val = Encoding.ASCII.GetString(packetBytes, i, tdfValueLength).Replace("\0", "");
+                    val = Encoding.Latin1.GetString(packetBytes, i, tdfValueLength).Replace("\0", "");
                     break;
 
                 case TdfType.Int8:

@@ -13,6 +13,7 @@ namespace Blaze.Components.Redirector.Handlers
         {
             byte[] serverIPBytes = IPAddress.Parse(ServerGlobals.ServerIP).GetAddressBytes();
             serverIPBytes = serverIPBytes.Reverse().ToArray();
+            uint serverIP = BitConverter.ToUInt32(serverIPBytes, 0);
 
             BlazeMessage responseMsg = BlazeMessage.CreateResponseFromModel(
                 packetBytes,
@@ -22,7 +23,7 @@ namespace Blaze.Components.Redirector.Handlers
                     {
                         IpAddress = new IpAddress
                         {
-                            IP = BitConverter.ToUInt32(serverIPBytes, 0),
+                            IP = serverIP,
                             Port = ServerGlobals.ServerPort
                         }
                     },

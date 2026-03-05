@@ -9,17 +9,21 @@ namespace Blaze.Components.Gamemanager.Handlers
         public static async Task HandleRequest(User user, byte[] packetBytes)
         {
             var request = BlazeMessage.CreateModelFromRequest<RemovePlayerRequest>(packetBytes);
-            Player playerToKick = user.gamePlayer;
-
-            // Only allow kicking self when not host
-            if (playerToKick.UserData != user && user.CurrentGame.HostId != user.UserIdentification.BlazeId)
-            {
-                await ServerUtils.SendError(user, packetBytes, ServerUtils.ErrorCode.GAMEMANAGER_ERR_PERMISSION_DENIED);
-                return;
-            }
-
+            Player playerToKick = user.CurrentGame.Players.Where(x=>x.PlayerData.PlayerId == request.PlayerId).FirstOrDefault();
             await ServerUtils.SendEmptyResponse(user, packetBytes);
-            await GameManagerUtils.RemoveUserFromGame(playerToKick, user.CurrentGame, request.RemovalReason);
+
+            if (playerToKick != null)
+            {
+                // Only allow kicking self when not host
+                if (playerToKick.UserData != user && user.CurrentGame.HostId != user.UserIdentification.BlazeId)
+                {
+                    await ServerUtils.SendError(user, packetBytes, ServerUtils.ErrorCode.GAMEMANAGER_ERR_PERMISSION_DENIED);
+                    return;
+                }
+
+
+                await GameManagerUtils.RemoveUserFromGame(playerToKick, user.CurrentGame, request.RemovalReason);
+            }
         }
     }
 }

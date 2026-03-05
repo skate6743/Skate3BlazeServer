@@ -10,16 +10,22 @@ namespace Servers
         public static ushort ServerPort = 42100;
         public static ushort HttpServerPort = 80;
         public static uint PingPeriodSecs = 20;
-        public static uint QoSProbes = 5;
-        public static uint QoSProbeSize = 150;
 
-        public static ConcurrentDictionary<uint, User> Users = new ConcurrentDictionary<uint, User>();
-        public static ConcurrentDictionary<uint, Game> Games = new ConcurrentDictionary<uint, Game>();
+        public static ConcurrentDictionary<uint, User> Users = new();
+        public static ConcurrentDictionary<uint, Game> Games = new();
+        public static ConcurrentDictionary<Game, RelayServer> LobbyRelayServers = new();
 
-        private static int _gameIdCounter = 1;
+        private static int _gameIdCounter = 0;
         public static uint GetNextGameId()
         {
-            return (uint)Interlocked.Increment(ref _gameIdCounter);
+            while (true)
+            {
+                int current = _gameIdCounter;
+                int next = current >= 500 ? 1 : current + 1;
+
+                if (Interlocked.CompareExchange(ref _gameIdCounter, next, current) == current)
+                    return (uint)next;
+            }
         }
 
         private static int _userIdCounter = 1;
