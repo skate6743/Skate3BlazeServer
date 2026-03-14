@@ -2,7 +2,12 @@
 using Servers;
 using Servers.Models;
 
-if (File.Exists("settings.json"))
+var envIp = Environment.GetEnvironmentVariable("SERVER_IP");
+if (!string.IsNullOrEmpty(envIp))
+{
+    ServerGlobals.ServerIP = envIp;
+}
+else if (File.Exists("settings.json"))
 {
     string serverSettingsJson = File.ReadAllText("settings.json");
     ServerSettings? serverSettings = JsonConvert.DeserializeObject<ServerSettings>(serverSettingsJson);
