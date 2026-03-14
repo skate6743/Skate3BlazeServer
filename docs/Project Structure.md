@@ -1,7 +1,7 @@
 # Project structure
 
 ## Overview
-The "Servers" folder contains all 3 mandatory servers for having online functioning. This includes a HTTP server, a QoS UDP server and finally the main Blaze TCP server.
+The "Servers" folder contains all 3 mandatory servers for having online functioning. This includes a HTTP server, UDP Relay servers used for lobbies and finally the main Blaze TCP server.
 
 Below are explanations for each one:
 
