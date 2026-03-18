@@ -1,0 +1,11 @@
+services:
+  server:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "42100:42100/tcp"
+      - "42100:42100/udp"
+      - "80:80/tcp"
+      - "17000-17500:17000-17500/udp"
+    environment:
+      - SERVER_IP=${SERVER_IP}
