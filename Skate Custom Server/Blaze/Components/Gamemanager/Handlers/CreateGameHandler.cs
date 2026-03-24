@@ -5,7 +5,6 @@ using Blaze.GamemanagerComponent;
 using Servers.Blaze.Models;
 using Blaze.MessageLists;
 using Blaze.Components.UserSessions.Models;
-using System.Net;
 
 namespace Blaze.Components.Gamemanager.Handlers
 {
@@ -104,7 +103,7 @@ namespace Blaze.Components.Gamemanager.Handlers
                 TopologyHost = topologyHostInfo,
                 PlatformHost = platformHostInfo,
                 QueueCapacity = request.QueueCapacity,
-                VoipTopology = (int)VoipTopology.VOIP_DISABLED,
+                VoipTopology = (int)VoipTopology.VOIP_DEDICATED_SERVER,
                 GameProtocolVersionString = request.GameProtocolVersionString
             };
 
@@ -134,7 +133,7 @@ namespace Blaze.Components.Gamemanager.Handlers
                 (ushort)GameManagerNotifications.NotifyJoinGame);
 
             creator.CurrentGame = game;
-            creator.gamePlayer = player;
+            creator.GamePlayer = player;
         }
     }
 }

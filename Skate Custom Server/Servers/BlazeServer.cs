@@ -119,9 +119,22 @@ namespace Servers
                 finally
                 {
                     cts.Dispose();
+
+                    try
+                    {
+                        await HandleClientDisconnected(user);
+                    }
+                    catch (Exception ex)
+                    {
+                        ServerLogger.Log(ex.Message);
+                        
+                        // Ensure user is always removed from the global list
+                        if (user.IsAuthenticated)
+                            ServerGlobals.Users.TryRemove(user.Session.BlazeId, out _);
+                    }
                 }
 
-                await HandleClientDisconnected(user);
+                
             }
         }
 
@@ -130,7 +143,7 @@ namespace Servers
             BlazeComponent component =
                 (BlazeComponent)TdfUtils.GetComponentFromPacket(packetBytes);
 
-            // Restrict access to some components until authenticated with proper RPCN ticket
+            // Restrict access to some components until authenticated with proper PSN ticket
             if (!user.IsAuthenticated &&
                 component != BlazeComponent.Util &&
                 component != BlazeComponent.Authentication &&
@@ -173,11 +186,12 @@ namespace Servers
 
         private async Task HandleClientDisconnected(User user)
         {
+            user.Disconnected = true;
             if (user.IsAuthenticated)
             {
                 if (user.CurrentGame != null)
                 {
-                    Player player = user.gamePlayer;
+                    Player player = user.GamePlayer;
                     await GameManagerUtils.RemoveUserFromGame(player, user.CurrentGame, (int)PlayerRemovedReason.PLAYER_LEFT);
                 }
 

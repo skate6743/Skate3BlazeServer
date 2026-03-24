@@ -26,7 +26,6 @@ namespace Blaze
                     await ServerUtils.SendEmptyResponse(user, receivedPacket);
                     break;
                 default:
-                    Console.WriteLine($"{authenticationMessage} command is not implemented!");
                     await ServerUtils.SendError(user, receivedPacket, ServerUtils.ErrorCode.ERR_COMMAND_NOT_FOUND);
                     break;
             }

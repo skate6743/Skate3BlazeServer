@@ -56,7 +56,6 @@ namespace Blaze
                     await CancelMatchmakingHandler.HandleRequest(user, receivedPacket);
                     break;
                 default:
-                    Console.WriteLine($"{gamemanagerMessage} in Gamemanager component is not implemented!");
                     await ServerUtils.SendError(user, receivedPacket, ServerUtils.ErrorCode.ERR_COMMAND_NOT_FOUND);
                     break;
             }

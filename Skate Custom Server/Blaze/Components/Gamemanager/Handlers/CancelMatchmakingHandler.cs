@@ -13,7 +13,7 @@ namespace Blaze.Components.Gamemanager.Handlers
         {
             await ServerUtils.SendEmptyResponse(user, packetBytes);
 
-            user.isMatchmaking = false;
+            user.IsMatchmaking = false;
         }
     }
 }

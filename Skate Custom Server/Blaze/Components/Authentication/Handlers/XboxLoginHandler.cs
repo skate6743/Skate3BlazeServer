@@ -1,12 +1,9 @@
 ﻿using Blaze.Components.Authentication.Commands;
 using Blaze.Components.Authentication.Models;
 using Blaze.Components.UserSessions.Models;
-using NPTicket;
-using NPTicket.Verification;
-using NPTicket.Verification.Keys;
 using Servers;
 using Servers.Blaze.Models;
-using System.Net.Http.Headers;
+using System.Net;
 
 namespace Blaze.Components.Authentication
 {
@@ -18,7 +15,7 @@ namespace Blaze.Components.Authentication
 
 			Console.WriteLine($"Xbox user {req.Gamertag} has signed in!");
 
-            uint id = ServerGlobals.GetNextUserId();
+            uint id = 123;
 
             string basePath = AppDomain.CurrentDomain.BaseDirectory;
             string usernamesPath = Path.Combine(basePath, "spoofed_usernames.json");
@@ -49,7 +46,14 @@ namespace Blaze.Components.Authentication
                 });
 
             await user.Stream.WriteAsync(response.Serialize());
-            
+
+
+            Console.WriteLine("XUID IS " + req.XUID);
+            IPEndPoint ep = (IPEndPoint)user.Stream.Socket.LocalEndPoint;
+            byte[] addrBytes = BitConverter.GetBytes(ep.Address.Address).Take(4).ToArray();
+            addrBytes = addrBytes.Reverse().ToArray();
+            uint addr = BitConverter.ToUInt32(addrBytes, 0);
+            Console.WriteLine(addr);
 
             // Store user session details for later use
             user.Session = session;
@@ -57,22 +61,7 @@ namespace Blaze.Components.Authentication
             {
                 BestPingSite = "sjc",
                 DataMap = new Dictionary<uint, uint> { { 458823, 0 } },
-                NetworkAddress = new NetworkAddress
-                {
-                    IpPairAddress = new IpPairAddress
-                    {
-                         ExternalIp = new IpAddress
-                         {
-                             IP =0,
-                             Port = 10000
-                         },
-                         InternalIp = new IpAddress
-                         {
-                             IP = 0,
-                             Port = 10000
-                         }
-                    }
-                }
+                NetworkAddress = new NetworkAddress { IpPairAddress = new IpPairAddress { ExternalIp = new IpAddress { IP = addr, Port = 10000 }, InternalIp = new IpAddress { IP = addr, Port = 10000 } } }
             };
 
             user.UserIdentification = new UserIdentification
@@ -86,7 +75,10 @@ namespace Blaze.Components.Authentication
             };
 
             user.IsAuthenticated = true;
+            user.Session.PersonaDetails.ExternalRef = req.XUID;
             ServerGlobals.Users[session.BlazeId] = user;
+
+            
         }
     }
 }

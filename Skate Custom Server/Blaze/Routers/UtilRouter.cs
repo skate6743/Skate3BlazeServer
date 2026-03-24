@@ -50,8 +50,10 @@ namespace Blaze
                 case UtilMessage.getTickerServer:
                     await GetTickerServerHandler.HandleRequest(user, receivedPacket);
                     break;
+                case UtilMessage.filterForProfanity:
+                    await FilterForProfanityHandler.HandleRequest(user, receivedPacket);
+                    break;
                 default:
-                    Console.WriteLine($"{utilMessage} command is not implemented!");
                     await ServerUtils.SendError(user, receivedPacket, ServerUtils.ErrorCode.ERR_COMMAND_NOT_FOUND);
                     break;
             }

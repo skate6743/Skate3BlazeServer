@@ -34,7 +34,12 @@ namespace Blaze.Components.Gamemanager.Handlers
                         (ushort)GameManagerNotifications.NotifyPlayerJoinCompleted);
 
                     plr.PlayerData.PlayerState = (int)PlayerState.ACTIVE_CONNECTED;
-                    user.CurrentGame.AcceptingRelayConnections = false;
+
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(20));
+                        user.CurrentGame.RemoveFromQueue();
+                    });
                 }
             }
         }

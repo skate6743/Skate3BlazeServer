@@ -50,6 +50,7 @@ namespace Servers
                 _= UdpSendBack(_udpClient, result);
             }
         }
+
         private async Task UdpSendBack(UdpClient udp, UdpReceiveResult result)
         {
             try
@@ -60,7 +61,7 @@ namespace Servers
                     if (buf.Length > 5000)
                         return;
 
-                    if (_game.AcceptingRelayConnections && _players.Count < 10)
+                    if (_game.PlayersInQueue > 0 && _players.Count < 11)
                     {
                         if (!_whitelistedIps.Contains(ep))
                         {
@@ -73,17 +74,18 @@ namespace Servers
 
                     _players[ep] = DateTime.UtcNow;
 
-                    var stale = _players.Where(kv => (DateTime.UtcNow - kv.Value).TotalSeconds >= 3).ToList();
+                    var stale = _players.Where(kv => (DateTime.UtcNow - kv.Value).TotalSeconds >= 5).ToList();
                     foreach (var kv in stale)
                     {
                         _players.TryRemove(kv.Key, out _);
                     }
 
-                    foreach (var receiver in _players.Keys)
-                    {
-                        if (!receiver.Equals(ep))
-                            await udp.SendAsync(buf, buf.Length, receiver);
-                    }
+
+                    var tasks = _players.Keys
+                        .Where(receiver => !receiver.Equals(ep))
+                        .Select(receiver => udp.SendAsync(buf, buf.Length, receiver));
+
+                    await Task.WhenAll(tasks);
                 }
             }
             catch { }

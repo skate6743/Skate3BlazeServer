@@ -35,9 +35,9 @@ public class TicketReader : BinaryReader
     public void DetermineTicketFormat()
     {
         TicketVersion version = ReadTicketVersion();
-        Console.Write($"Ticket version {version.Major}.{version.Minor}");
+        
         ushort length = ReadTicketHeader();
-        Console.WriteLine($", length is {length} bytes");
+        
 
         while (this.BaseStream.Position <= length)
         {
@@ -45,16 +45,12 @@ public class TicketReader : BinaryReader
         }
         
         long unreadBytes = this.BaseStream.Length - this.BaseStream.Position;
-        if (unreadBytes != 0)
-        {
-            Console.WriteLine($"!!! Unread bytes: {unreadBytes} !!!");
-        }
     }
 
     private void DetermineSectionFormat()
     {
         TicketDataSection section = ReadTicketSectionHeader();
-        Console.WriteLine($"  {section.Type} Section, length is {section.Length} @ offset {section.Position}");
+        
 
         if (section.Type == TicketDataSectionType.DateOfBirth)
         {
@@ -78,7 +74,7 @@ public class TicketReader : BinaryReader
             return;
         }
         this.ReadBytes(data.Length);
-        Console.WriteLine($"    {data.Type}, length is {data.Length}");
+        
     }
 
     internal TicketDataSection ReadTicketSectionHeader()

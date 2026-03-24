@@ -72,7 +72,7 @@ namespace Blaze.Components.Gamemanager.Handlers
                     if (!foundGame)
                         continue;
 
-                    matchmaker.isMatchmaking = true;
+                    matchmaker.IsMatchmaking = true;
                     await GameManagerUtils.UserJoinGame(matchmaker, game, true);
                     return;
                 }

@@ -6,27 +6,67 @@ using NPTicket.Verification;
 using NPTicket.Verification.Keys;
 using Servers;
 using Servers.Blaze.Models;
+using Servers.Models;
+using Servers.Database;
 
 namespace Blaze.Components.Authentication
 {
     public class Ps3LoginHandler
     {
+        private class SkateSigningKey : PsnSigningKey
+        {
+            public override string PublicKeyX => "a93f2d73da8fe51c59872fad192b832f8b9dabde8587233";
+            public override string PublicKeyY => "93131936a54a0ea51117f74518e56aae95f6baff4b29f999";
+        }
+
         public static async Task HandleRequest(User user, byte[] packetBytes)
         {
             var loginRequest = BlazeMessage.CreateModelFromRequest<Ps3LoginRequest>(packetBytes);
 
             Ticket ps3Ticket = Ticket.ReadFromBytes(loginRequest.ps3Ticket);
 
+            // RPCN Ticket Verifying
             var verifier = new TicketVerifier(loginRequest.ps3Ticket, ps3Ticket, RpcnSigningKey.Instance);
-            if (!verifier.IsTicketValid())
+            if (verifier.IsTicketValid())
             {
-                await ServerUtils.SendError(user, packetBytes, ServerUtils.ErrorCode.AUTH_ERR_INVALID_PS3_TICKET);
-                return;
+                user.Platform = UserPlatform.RPCS3;
+            }
+            else
+            {
+                // PS3 Ticket Verifying if RPCN ticket came back invalid
+                verifier = new TicketVerifier(loginRequest.ps3Ticket, ps3Ticket, new SkateSigningKey());
+                if (verifier.IsTicketValid())
+                {
+                    user.Platform = UserPlatform.PS3;
+                }
+                else
+                {
+                    await ServerUtils.SendError(user, packetBytes, ServerUtils.ErrorCode.AUTH_ERR_INVALID_PS3_TICKET);
+                    return;
+                }
             }
 
             ServerLogger.LogSignIn(ps3Ticket.Username);
 
-			SessionDetails sessionDetails = AuthUtils.CreateNewSessionDetails(ps3Ticket);
+            await using var db = new AppDbContext();
+            db.Database.EnsureCreated();
+
+            var userData = db.Users.FirstOrDefault(u => u.PsnId == ps3Ticket.UserId && u.Platform == user.Platform);
+
+            if (userData == null)
+            {
+                userData = new UserDbData
+                {
+                    Platform = user.Platform,
+                    PsnId = ps3Ticket.UserId,
+                    DisplayName = ps3Ticket.Username
+                };
+
+                db.Users.Add(userData);
+                await db.SaveChangesAsync();
+            }
+
+			SessionDetails sessionDetails = AuthUtils.CreateNewSessionDetails(ps3Ticket, userData.BlazeId);
 
             BlazeMessage response = BlazeMessage.CreateResponseFromModel(
                 packetBytes,
@@ -44,19 +84,7 @@ namespace Blaze.Components.Authentication
             user.Session = sessionDetails;
             user.ExtendedData = new UserSessionExtendedData
             {
-                BestPingSite = "sjc",
-                DataMap = new Dictionary<uint, uint> { { 458823, 0 } },
-                NetworkAddress = new NetworkAddress
-                {
-                    IpPairAddress = new IpPairAddress
-                    {
-                        ExternalIp = new IpAddress
-                        {
-                            IP = 123,
-                            Port = 123
-                        }
-                    }
-                }
+                DataMap = new Dictionary<uint, uint> { { 458823, 0 } } // enUS locale
             };
 
             user.UserIdentification = new UserIdentification

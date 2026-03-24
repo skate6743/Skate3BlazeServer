@@ -32,7 +32,7 @@ internal static class TicketParser30
         reader.ReadUInt32(); // Birthdate
         reader.SkipTicketEmptyData(2); // Padding?
         
-        Console.WriteLine(reader.BaseStream.Position);
+        
         header = reader.ReadTicketSectionHeader();
         if(header.Type != TicketDataSectionType.Age)
         {

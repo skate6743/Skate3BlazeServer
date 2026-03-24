@@ -5,9 +5,12 @@ using Servers.Blaze.Models;
 
 namespace Blaze.Components.Util.Handlers
 {
-    public class PreAuthHandler
+    public static class PreAuthHandler
     {
-        public static async Task HandleRequest(User user, byte[] packetBytes)
+        // preAuth response is pretty much same so cache it instead of rebuilding always
+        private static byte[] _cachedBytes;
+
+        static PreAuthHandler()
         {
             Dictionary<string, string> config = new Dictionary<string, string>
             {
@@ -15,15 +18,8 @@ namespace Blaze.Components.Util.Handlers
                 { "voipHeadsetUpdateRate", "1000" }
             };
 
-            QosPingSiteInfo pingSiteInfo = new QosPingSiteInfo
-            {
-                Address = ServerGlobals.ServerIP,
-                Port = 80,
-                SiteName = ServerGlobals.ServerIP
-            };
-
             BlazeMessage response = BlazeMessage.CreateResponseFromModel(
-                packetBytes,
+                new byte[] { 0, 0, 0, 9, 0, 7, 0, 0, 0, 0, 0, 0 },
                 new PreAuthResponse
                 {
                     ComponentIds = new List<ushort> { 1, 4, 7, 8, 9, 11, 12, 15, 25, 30720, 30722, 30723 },
@@ -39,7 +35,16 @@ namespace Blaze.Components.Util.Handlers
                     ServerVersion = "Custom Blaze 2.11.3.1 Server"
                 });
 
-			await user.Stream.WriteAsync(response.Serialize());
+            _cachedBytes = response.Serialize();
+        }
+
+        public static async Task HandleRequest(User user, byte[] packetBytes)
+        {
+            byte[] response = (byte[])_cachedBytes.Clone();
+            for (int i = 0; i < 2; i++)
+                response[10 + i] = packetBytes[10+i];
+
+			await user.Stream.WriteAsync(response);
         }
     }
 }

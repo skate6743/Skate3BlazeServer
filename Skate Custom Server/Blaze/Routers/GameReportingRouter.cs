@@ -17,7 +17,6 @@ namespace Blaze
                     await SubmitOfflineGameReportHandler.HandleRequest(user, receivedPacket);
                     break;
                 default:
-                    Console.WriteLine($"{gameReportingMessage} command is not implemented!");
                     await ServerUtils.SendError(user, receivedPacket, ServerUtils.ErrorCode.ERR_COMMAND_NOT_FOUND);
                     break;
             }

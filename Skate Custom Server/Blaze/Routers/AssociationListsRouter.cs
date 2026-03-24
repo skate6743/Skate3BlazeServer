@@ -17,7 +17,6 @@ namespace Blaze
                     await GetLists.HandleRequest(user, receivedPacket);
                     break;
                 default:
-                    Console.WriteLine($"{associationListMessage} command is not implemented!");
                     await ServerUtils.SendError(user, receivedPacket, ServerUtils.ErrorCode.ERR_COMMAND_NOT_FOUND);
                     break;
             }

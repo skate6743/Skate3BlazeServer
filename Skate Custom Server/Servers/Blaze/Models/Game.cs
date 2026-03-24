@@ -9,7 +9,20 @@ namespace Servers.Blaze.Models
         public uint HostId;
         public ReplicatedGameData GameData = new ReplicatedGameData();
         public List<Player> Players = new List<Player>();
-        public bool AcceptingRelayConnections = false;
+
+        public uint PlayersInQueue;
+        public void AddToQueue() => Interlocked.Increment(ref PlayersInQueue);
+        public void RemoveFromQueue()
+        {
+            uint current;
+            do
+            {
+                current = PlayersInQueue;
+                if (current == 0) return;
+            }
+            while (Interlocked.CompareExchange(ref PlayersInQueue, current - 1, current) != current);
+        }
+
         public readonly object Lock = new object();
     }
 }

@@ -1,8 +1,11 @@
 # Skate 3 Custom Blaze Server
-Barebones custom Skate 3 Blaze server for RPCS3 with functional matchmaking. Skate web features such as Import Skaters, Parks, etc. will be implemented eventually too :)
+Skate 3 custom Blaze server for RPCS3/PS3 with working matchmaking and content server features.
+# Features
+* Functional matchmaking and player invites from friends list ingame
+* Relay servers for each lobby (no Peer to Peer connections between players)
+* Park uploading/downloading from the Skate.Park menu ingame
 
 # Joining Our Public Server
-Before proceeding with these instructions, if you are someone that plays on the Party Play EBOOT to have your own skater in Party Play, please download and install this [Original EBOOT](https://www.mediafire.com/file/jdwv2z1k49wwu6v/EBOOT.BIN/file) to RPCS3/dev_hdd0/game/BLUS30464 (or BLES00760 for BLES)/USRDIR. If you don't know what the Party Play EBOOT is then you can skip this step!
 ### Automated setup (Recommended for Windows):
 [VIDEO GUIDE](https://www.youtube.com/watch?v=i5fHEhsqzA4)
 1. Open RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version. After updating just close out of RPCS3.
@@ -11,6 +14,7 @@ Before proceeding with these instructions, if you are someone that plays on the 
 4. Open your RPCS3, click on the "RPCN" icon (right next to pads settings), and go to Account->Create Account if you don't have one already. You will need to fully go through the account creation process with verifying your email, etc.
 5. Now you can boot Skate 3 and connect to EA Nation!
 ### Manual setup (Recommended for Linux):
+Before proceeding with these instructions, you must download the [No SyncCheck EBOOT File](https://www.mediafire.com/file/jl35j90hokucchd/EBOOT.BIN/file) and put it to RPCS3/dev_hdd0/game/BLUS30464 (or BLES00760 on EU version)/USRDIR
 1. Open RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version.
 2. On RPCS3 right click on Skate 3, and click on "Change Custom Configuration" (If you have not made one yet, click on "Create Custom Configuration")
 3. Head over to the CPU tab on the custom config, and set "XFloat Accuracy" to "Approximate", and make sure "Enable SPU loop detection" is unticked.
@@ -35,7 +39,7 @@ Before proceeding with these instructions, please download the [Compiled Server 
 9. In settings.json of the server files, set LocalHost to true and the LocalIPAddress to your Radmin IP.
 10. Run the server, now you and your friends can boot up Skate 3 and sign into EA Nation.
 ### Hosting publicly
-Forward port 42100 for both UDP and TCP, and port 80 for TCP. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com==YourPublicIPHere&&downloads.skate.online.ea.com==YourPublicIPHere"
+Forward ports 42100 and 80 for TCP, and lastly range 17000-17500 for UDP for relay servers used in lobbies. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com==YourPublicIPHere&&downloads.skate.online.ea.com==YourPublicIPHere"
 # Special Thanks
 [@Aim4Kill](https://github.com/Aim4kill) for making the [BlazeSDK](https://github.com/Aim4kill/BlazeSDK) (Saved so much time with having the packet structures there for almost all Blaze commands)
 

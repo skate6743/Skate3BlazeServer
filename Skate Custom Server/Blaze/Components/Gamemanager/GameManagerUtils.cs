@@ -4,7 +4,6 @@ using Blaze.GamemanagerComponent;
 using Blaze.MessageLists;
 using Servers;
 using Servers.Blaze.Models;
-using System.Net;
 
 namespace Blaze.Components.Gamemanager
 {
@@ -17,7 +16,7 @@ namespace Blaze.Components.Gamemanager
             {
                 lock (game.Lock)
                 {
-                    if (!matchmaker.isMatchmaking)
+                    if (!matchmaker.IsMatchmaking)
                         return;
 
                     if (game.Players.All(plr => plr.PlayerData.PlayerState == (int)PlayerState.ACTIVE_CONNECTED))
@@ -59,8 +58,8 @@ namespace Blaze.Components.Gamemanager
 
                 game.Players.Add(newPlayer);
                 snapshot = game.Players.ToList();
-                game.AcceptingRelayConnections = true;
-                _ = ConfirmPlayerConnectivity(matchmaker);
+                game.AddToQueue();
+                _ = ConfirmPlayerConnectivity(matchmaker, game);
             }
             
             // Notify matchmaker to join new game
@@ -114,8 +113,8 @@ namespace Blaze.Components.Gamemanager
             }
 
             matchmaker.CurrentGame = game;
-            matchmaker.gamePlayer = newPlayer;
-            matchmaker.isMatchmaking = false;
+            matchmaker.GamePlayer = newPlayer;
+            matchmaker.IsMatchmaking = false;
         }
 
         public static byte FindFreeSlot(Game game)
@@ -135,14 +134,14 @@ namespace Blaze.Components.Gamemanager
             return 1;
         }
 
-        public static async Task ConfirmPlayerConnectivity(User user)
+        public static async Task ConfirmPlayerConnectivity(User user, Game game)
         {
             await Task.Delay(20000);
 
-            if (user.gamePlayer != null && user.CurrentGame != null)
+            if (user.GamePlayer != null && user.CurrentGame != null && user.CurrentGame == game)
             {
-                if (user.gamePlayer.PlayerData.PlayerState == (int)PlayerState.ACTIVE_CONNECTING)
-                    await RemoveUserFromGame(user.gamePlayer, user.CurrentGame, (int)PlayerRemovedReason.PLAYER_CONN_LOST);
+                if (user.GamePlayer.PlayerData.PlayerState == (int)PlayerState.ACTIVE_CONNECTING)
+                    await RemoveUserFromGame(user.GamePlayer, user.CurrentGame, (int)PlayerRemovedReason.PLAYER_CONN_LOST);
             }
 
             return;
@@ -155,7 +154,6 @@ namespace Blaze.Components.Gamemanager
             (DateTime.UtcNow.Ticks % TimeSpan.TicksPerMillisecond) / 10;
 
             byte slotId = FindFreeSlot(game);
-
             return new ReplicatedGamePlayer
             {
                 Locale = 1701729619, // enUS
@@ -225,6 +223,9 @@ namespace Blaze.Components.Gamemanager
         {
             if (playerToRemove.UserData.CurrentGame == game)
             {
+                if (playerToRemove.PlayerData.PlayerState == (int)PlayerState.ACTIVE_CONNECTING)
+                    game.RemoveFromQueue();
+
                 User userData = playerToRemove.UserData;
 
                 uint hostId = game.GameData.PlatformHost.PlayerId;
@@ -249,19 +250,22 @@ namespace Blaze.Components.Gamemanager
                     // If lobby has no players left Remove it
                     if (game.Players.Count == 0)
                     {
-                        _= ServerUtils.SendNotificationToUser(
-                            playerToRemove.UserData,
-                            playerRemovedNotification,
-                            BlazeComponent.Gamemanager,
-                            (ushort)GameManagerNotifications.NotifyPlayerRemoved);
+                        if (!playerToRemove.UserData.Disconnected)
+                        {
+                            _ = ServerUtils.SendNotificationToUser(
+                                playerToRemove.UserData,
+                                playerRemovedNotification,
+                                BlazeComponent.Gamemanager,
+                                (ushort)GameManagerNotifications.NotifyPlayerRemoved);
+                        }
 
-                        // Destroy lobby relay server
+                        // Destroy lobby relay server and remove from games list
                         _= ServerGlobals.LobbyRelayServers[game].StopAsync();
                         ServerGlobals.LobbyRelayServers.TryRemove(game, out _);
                         ServerGlobals.Games.TryRemove(game.GameData.GameId, out _);
 
                         playerToRemove.UserData.CurrentGame = null;
-                        playerToRemove.UserData.gamePlayer = null;
+                        playerToRemove.UserData.GamePlayer = null;
                         return;
                     }
                 }
@@ -274,16 +278,20 @@ namespace Blaze.Components.Gamemanager
 
                 foreach (Player player in snapshot)
                 {
+                    if (playerToRemove.UserData.Disconnected
+                        && player.PlayerData.PlayerId == playerToRemove.PlayerData.PlayerId)
+                        continue;
+
                     await ServerUtils.SendNotificationToUser(
-                    player.UserData,
-                    playerRemovedNotification,
-                    BlazeComponent.Gamemanager,
-                    (ushort)GameManagerNotifications.NotifyPlayerRemoved);
+                        player.UserData,
+                        playerRemovedNotification,
+                        BlazeComponent.Gamemanager,
+                        (ushort)GameManagerNotifications.NotifyPlayerRemoved);
                 }
             }
 
             playerToRemove.UserData.CurrentGame = null;
-            playerToRemove.UserData.gamePlayer = null;
+            playerToRemove.UserData.GamePlayer = null;
         }
     }
 }

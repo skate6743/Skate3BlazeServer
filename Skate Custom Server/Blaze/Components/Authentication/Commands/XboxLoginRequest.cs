@@ -6,5 +6,8 @@ namespace Blaze.Components.Authentication.Commands
     {
         [TdfMember("GTAG")]
         public string Gamertag;
+
+        [TdfMember("XUID")]
+        public ulong XUID;
     }
 }

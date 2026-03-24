@@ -15,6 +15,8 @@ namespace Servers
         public static ConcurrentDictionary<uint, Game> Games = new();
         public static ConcurrentDictionary<Game, RelayServer> LobbyRelayServers = new();
 
+        public static List<byte[]> CachedRequests = new List<byte[]>();
+
         private static int _gameIdCounter = 0;
         public static uint GetNextGameId()
         {
@@ -26,12 +28,6 @@ namespace Servers
                 if (Interlocked.CompareExchange(ref _gameIdCounter, next, current) == current)
                     return (uint)next;
             }
-        }
-
-        private static int _userIdCounter = 1;
-        public static uint GetNextUserId()
-        {
-            return (uint)Interlocked.Increment(ref _userIdCounter);
         }
     }
 }
