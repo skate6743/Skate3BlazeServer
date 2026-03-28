@@ -61,7 +61,7 @@ namespace Blaze.Components.Gamemanager
                 game.AddToQueue();
                 _ = ConfirmPlayerConnectivity(matchmaker, game);
             }
-            
+
             // Notify matchmaker to join new game
             List<ReplicatedGamePlayer> playerList = snapshot.Select(player => player.PlayerData).ToList();
 
@@ -186,7 +186,7 @@ namespace Blaze.Components.Gamemanager
                     else
                         newHost = game.Players.Where(x => x.PlayerData.PlayerId == newHostId).First();
                 }
-                
+
                 byte newHostSlot = newHost.PlayerData.SlotId;
 
                 if (newHostId == 0)
@@ -219,6 +219,19 @@ namespace Blaze.Components.Gamemanager
             }
         }
 
+        private static void DestroyRelayServer(Game game)
+        {
+            if (ServerGlobals.LobbyRelayServers.TryRemove(game, out var relay))
+            {
+                _ = Task.Run(async () =>
+                {
+                    try { await relay.StopAsync(); }
+                    catch { }
+                });
+            }
+            ServerGlobals.Games.TryRemove(game.GameData.GameId, out _);
+        }
+
         public static async Task RemoveUserFromGame(Player playerToRemove, Game game, int removeReason)
         {
             if (playerToRemove.UserData.CurrentGame == game)
@@ -247,7 +260,7 @@ namespace Blaze.Components.Gamemanager
                     snapshot = game.Players.ToList();
                     game.Players.Remove(playerToRemove);
 
-                    // If lobby has no players left Remove it
+                    // If lobby has no players left remove it
                     if (game.Players.Count == 0)
                     {
                         if (!playerToRemove.UserData.Disconnected)
@@ -259,10 +272,7 @@ namespace Blaze.Components.Gamemanager
                                 (ushort)GameManagerNotifications.NotifyPlayerRemoved);
                         }
 
-                        // Destroy lobby relay server and remove from games list
-                        _= ServerGlobals.LobbyRelayServers[game].StopAsync();
-                        ServerGlobals.LobbyRelayServers.TryRemove(game, out _);
-                        ServerGlobals.Games.TryRemove(game.GameData.GameId, out _);
+                        DestroyRelayServer(game);
 
                         playerToRemove.UserData.CurrentGame = null;
                         playerToRemove.UserData.GamePlayer = null;
@@ -288,10 +298,12 @@ namespace Blaze.Components.Gamemanager
                         BlazeComponent.Gamemanager,
                         (ushort)GameManagerNotifications.NotifyPlayerRemoved);
                 }
-            }
 
-            playerToRemove.UserData.CurrentGame = null;
-            playerToRemove.UserData.GamePlayer = null;
+                ServerGlobals.LobbyRelayServers[game].RemoveFromWhitelistedUser(userBlazeId);
+
+                playerToRemove.UserData.CurrentGame = null;
+                playerToRemove.UserData.GamePlayer = null;
+            }
         }
     }
 }

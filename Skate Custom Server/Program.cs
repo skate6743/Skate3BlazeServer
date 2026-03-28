@@ -1,7 +1,8 @@
 ﻿using Newtonsoft.Json;
-using Servers;
+using Servers.Blaze;
 using Servers.HTTP;
 using Servers.Models;
+using Servers;
 
 if (File.Exists("settings.json"))
 {
@@ -24,7 +25,7 @@ ServerGlobals.ServerPort = 42100;
 ServerGlobals.HttpServerPort = 80;
 
 // Game must send a heartbeat ping request every X seconds or disconnect client
-ServerGlobals.PingPeriodSecs = 20;
+ServerGlobals.PingPeriodSecs = 15;
 
 // Start HTTP server used for mandatory stuff like config .xml during login flow (found in wwwroot folder)
 var httpServer = new HttpServer(ServerGlobals.HttpServerPort);

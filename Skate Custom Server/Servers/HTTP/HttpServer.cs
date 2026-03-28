@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Servers.Blaze.Models;
 using Servers.HTTP.ASMXEndpoints;
-using Servers.HTTP.ChatEndpoints;
+using Servers.HTTP.CustomEndpoints;
 using System.Net;
 using System.Text;
 using System.Xml.Linq;
@@ -124,30 +124,21 @@ namespace Servers.HTTP
                         res.Headers["Date"] = DateTime.UtcNow.ToString("R");
 
                         string path = req.Url.AbsolutePath.TrimEnd('/');
-                        
+
+                        // Default to stats.html
+                        if (string.IsNullOrWhiteSpace(path))
+                        {
+                            path = "/stats.html";
+                        }
+
                         // Custom server endpoints (not officially in Skate 3)
                         switch (path)
                         {
                             case "/sendchat":
                                 await SendChatEndpoint.SendChat(ctx);
-                                res.Close();
                                 break;
                             case "/serverstats":
-                                uint inLobbies = 0;
-                                foreach (User user in ServerGlobals.Users.Values)
-                                {
-                                    if (user.CurrentGame != null)
-                                        inLobbies++;
-                                }
-
-                                string json = new JObject(
-                                    new JProperty("signed-in", ServerGlobals.Users.Count),
-                                    new JProperty("in-lobbies", inLobbies),
-                                    new JProperty("games-count", ServerGlobals.Games.Count),
-                                    new JProperty("dirtycast-instances", ServerGlobals.LobbyRelayServers.Count)
-                                ).ToString();
-
-                                byte[] data = Encoding.Latin1.GetBytes(json);
+                                byte[] data = Encoding.Latin1.GetBytes(await ServerstatsEndpoint.GetServerStats(ctx));
                                 await res.OutputStream.WriteAsync(data, 0, data.Length, ct);
                                 break;
                             case "/spoofusername":
@@ -162,10 +153,16 @@ namespace Servers.HTTP
                                 res.ContentLength64 = contentBytes.Length;
                                 await res.OutputStream.WriteAsync(contentBytes, 0, contentBytes.Length, ct);
                                 break;
+                            case "/uploadtexture":
+                                string texUrl = await UploadTextureEndpoint.Upload(ctx);
+                                byte[] response = Encoding.Latin1.GetBytes(texUrl.ToString());
+                                res.ContentLength64 = response.Length;
+                                await res.OutputStream.WriteAsync(response, 0, response.Length, ct);
+                                break;
                         }
 
-                        // SkateReel.asmx endpoint
-                        if (path.StartsWith("/skate3/ws/SkateReel.asmx"))
+                        // ASMX Endpoint routing
+                        if (path.StartsWith("/skate3/ws/SkateReel.asmx") || path.StartsWith("/skate3/ws/SkateProfile.asmx"))
                         {
                             res.ContentType = "text/xml";
                             string responseContent = "";
@@ -173,9 +170,15 @@ namespace Servers.HTTP
                             string action = path.Split('/').LastOrDefault();
                             switch (action)
                             {
+                                case "UploadSchema":
+                                    responseContent = await SkateProfileEndpoint.UploadSchema(ctx);
+                                    break;
+                                case "GetSchema":
+                                    await SkateProfileEndpoint.GetSchema(ctx);
+                                    break;
                                 case "Upload":
-                                    int newFileId = await SkateReelEndpoint.HandleUpload(ctx);
-                                    responseContent = newFileId.ToString();
+                                    int newFileId = await SkateReelEndpoint.Upload(ctx);
+                                    responseContent = new XElement("LongContainer", new XElement("value", newFileId)).ToString();
                                     break;
                                 case "GetNumberOfFiles2":
                                     responseContent = new XElement("IntegerContainer", new XElement("value", "0")).ToString();
@@ -196,13 +199,28 @@ namespace Servers.HTTP
                                     responseContent = await SkateReelEndpoint.GetContent2(ctx);
                                     break;
                                 case "Delete":
-                                    await SkateReelEndpoint.Delete(ctx);
+                                    responseContent = await SkateReelEndpoint.Delete(ctx);
                                     break;
                                 case "GetFileContent":
                                     await SkateReelEndpoint.GetFileContent(ctx);
                                     break;
                                 case "Vote":
                                     responseContent = await SkateReelEndpoint.Vote(ctx);
+                                    break;
+                                case "GetBookmarkedContent":
+                                    responseContent = await SkateReelEndpoint.GetBookmarkedContent(ctx);
+                                    break;
+                                case "AddBookmark":
+                                    responseContent = await SkateReelEndpoint.AddBookmark(ctx);
+                                    break;
+                                case "DeleteBookmark":
+                                    await SkateReelEndpoint.DeleteBookmark(ctx);
+                                    break;
+                                case "IsVoted":
+                                    responseContent = new XElement("IntegerContainer", new XElement("value", "0")).ToString();
+                                    break;
+                                case "GetOneContent":
+                                    responseContent = await SkateReelEndpoint.GetOneContent(ctx);
                                     break;
                                 default:
                                     res.StatusCode = 404;

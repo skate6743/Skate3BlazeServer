@@ -33,12 +33,9 @@ namespace Blaze.Components.Authentication
                 string usernamesJson = File.ReadAllText(usernamesPath);
                 var nameSpoofs = JsonConvert.DeserializeObject<Dictionary<string, string>>(usernamesJson);
 
-                if (nameSpoofs != null)
+                if (nameSpoofs != null && nameSpoofs.ContainsKey(displayName))
                 {
-                    if (nameSpoofs.ContainsKey(displayName))
-                    {
-                        displayName = nameSpoofs[displayName];
-                    }
+                    displayName = nameSpoofs[displayName];
                 }
             }
 

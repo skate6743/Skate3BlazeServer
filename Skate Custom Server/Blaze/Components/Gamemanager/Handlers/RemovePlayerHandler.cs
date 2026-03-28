@@ -21,7 +21,6 @@ namespace Blaze.Components.Gamemanager.Handlers
                     return;
                 }
 
-
                 await GameManagerUtils.RemoveUserFromGame(playerToKick, user.CurrentGame, request.RemovalReason);
             }
         }

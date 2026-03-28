@@ -34,7 +34,7 @@ namespace Servers
             await receiver.Stream.WriteAsync(packet);
         }
 
-        public static async Task SendNotificationToPlayers<T>(Game game, T notification, BlazeComponent component, ushort command)
+        public static async Task SendNotificationToPlayers(Game game, object notification, BlazeComponent component, ushort command)
         {
             TdfStruct tdfNotification = TdfReflection.ToTdfStruct(notification);
             BlazeMessage msg = new BlazeMessage();
@@ -79,6 +79,7 @@ namespace Servers
                                 <halId>{halId}</halId>
                                 <attrib>
                                     <value>{attribute}</value>
+                                    <type>CHALLENGE</type>
                                 </attrib>
                             </FeedMessage>";
 
@@ -92,7 +93,7 @@ namespace Servers
                 {
                     Payload = new ClientMessage
                     {
-                        Attributes = new Dictionary<uint, string> { { 65282, xml } }, // Magic number haven't figured out yet why this is sent in all skate feed messages
+                        Attributes = new Dictionary<uint, string> { { 65282, xml } }, // Magic number haven't figured out why this is sent in all skate feed messages
                         Target = BitConverter.ToUInt64(targetBytes.ToArray())
                     },
                     Time = 0,
@@ -104,12 +105,11 @@ namespace Servers
 
         public static NetworkAddress ReserveLobbyRelayServer(Game game, ushort port)
         {
-            ushort dirtycastPort = port;
             byte[] serverIPBytes = IPAddress.Parse(ServerGlobals.ServerIP).GetAddressBytes();
             serverIPBytes = serverIPBytes.Reverse().ToArray();
             uint serverIP = BitConverter.ToUInt32(serverIPBytes, 0);
 
-            var relayServer = new RelayServer(game, (short)dirtycastPort);
+            var relayServer = new RelayServer(game, (short)port);
 
             // Start dirtycast (UDP relay) server for lobby
             ServerGlobals.LobbyRelayServers.TryAdd(game, relayServer);
@@ -120,7 +120,7 @@ namespace Servers
                 IpAddress = new IpAddress
                 {
                     IP = serverIP,
-                    Port = dirtycastPort
+                    Port = port
                 }
             };
         }

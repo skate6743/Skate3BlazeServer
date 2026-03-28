@@ -1,18 +1,30 @@
 ﻿using Blaze.Components.Authentication.Commands;
 using Blaze.Components.Authentication.Models;
 using Blaze.Components.UserSessions.Models;
+using Microsoft.EntityFrameworkCore;
 using NPTicket;
 using NPTicket.Verification;
 using NPTicket.Verification.Keys;
 using Servers;
 using Servers.Blaze.Models;
-using Servers.Models;
 using Servers.Database;
+using Servers.Models;
 
 namespace Blaze.Components.Authentication
 {
     public class Ps3LoginHandler
     {
+        public static bool UserBanned(string username)
+        {
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bannedusers.txt");
+            if (File.Exists(path))
+            {
+                string[] lines = File.ReadAllLines(path);
+                return lines.Any(x => x == username);
+            }
+            return false;
+        }
+
         private class SkateSigningKey : PsnSigningKey
         {
             public override string PublicKeyX => "a93f2d73da8fe51c59872fad192b832f8b9dabde8587233";
@@ -24,6 +36,9 @@ namespace Blaze.Components.Authentication
             var loginRequest = BlazeMessage.CreateModelFromRequest<Ps3LoginRequest>(packetBytes);
 
             Ticket ps3Ticket = Ticket.ReadFromBytes(loginRequest.ps3Ticket);
+
+            if (UserBanned(ps3Ticket.Username))
+                return;
 
             // RPCN Ticket Verifying
             var verifier = new TicketVerifier(loginRequest.ps3Ticket, ps3Ticket, RpcnSigningKey.Instance);
@@ -49,7 +64,7 @@ namespace Blaze.Components.Authentication
             ServerLogger.LogSignIn(ps3Ticket.Username);
 
             await using var db = new AppDbContext();
-            db.Database.EnsureCreated();
+            db.Database.Migrate();
 
             var userData = db.Users.FirstOrDefault(u => u.PsnId == ps3Ticket.UserId && u.Platform == user.Platform);
 

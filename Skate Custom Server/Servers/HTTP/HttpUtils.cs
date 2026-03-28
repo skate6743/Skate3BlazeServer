@@ -1,5 +1,4 @@
 ﻿using Servers.Blaze.Models;
-using Servers.Database;
 using System.Net;
 
 namespace Servers.HTTP
@@ -19,6 +18,7 @@ namespace Servers.HTTP
                 !int.TryParse(ctx.Request.QueryString["endIndex"], out int end) ||
                 end - start > maxRange)
                 return null;
+
             return (start - 1, end - 1);
         }
 

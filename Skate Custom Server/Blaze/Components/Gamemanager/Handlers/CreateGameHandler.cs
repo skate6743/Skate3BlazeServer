@@ -82,8 +82,20 @@ namespace Blaze.Components.Gamemanager.Handlers
             var game = new Game();
 
             // Reserve and start Dirtycast server for lobby
-            var hostNetworkAddress = ServerUtils.ReserveLobbyRelayServer(game, Convert.ToUInt16(17000 + gameId));
-
+            ushort relayServerPort = Convert.ToUInt16(17000 + gameId);
+            int attempts = 0;
+            while (ServerGlobals.LobbyRelayServers.Any(x => x.Value.Port == relayServerPort))
+            {
+                gameId = ServerGlobals.GetNextGameId();
+                relayServerPort = Convert.ToUInt16(17000 + gameId);
+                if (++attempts > 500)
+                {
+                    await ServerUtils.SendError(creator, packetBytes, ServerUtils.ErrorCode.GAMEMANAGER_ERR_PERMISSION_DENIED);
+                    return;
+                }
+            }
+            NetworkAddress relayServer = ServerUtils.ReserveLobbyRelayServer(game, relayServerPort);
+            
             var replicatedGameData = new ReplicatedGameData
             {
                 AdminPlayerList = new List<uint> { 123, creator.Session.BlazeId },
@@ -93,7 +105,7 @@ namespace Blaze.Components.Gamemanager.Handlers
                 GameName = creator.UserIdentification.Name,
                 GameSettings = request.GameSettings,
                 GameState = (int)GameState.INITIALIZING,
-                HostConnections = new List<NetworkAddress> { hostNetworkAddress },
+                HostConnections = new List<NetworkAddress> { relayServer },
                 TopologyHostSessionId = Convert.ToUInt32(creator.Session.UserId),
                 MaxPlayerCapacities = 6,
                 NetworkQosData = creator.ExtendedData.QosData,

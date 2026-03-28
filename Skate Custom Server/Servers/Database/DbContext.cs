@@ -11,6 +11,8 @@ namespace Servers.Database
         public DbSet<UserDbData> Users { get; set; }
         public DbSet<FilesDbData> Files { get; set; }
 
+        public DbSet<Bookmark> Bookmarks { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite("Data Source=skate.db");
 
@@ -30,6 +32,10 @@ namespace Servers.Database
                 .HasOne<FilesDbData>()
                 .WithMany(f => f.Ratings)
                 .HasForeignKey(r => r.FileId);
+
+            modelBuilder.Entity<Bookmark>()
+                .HasIndex(b => new { b.UserId, b.FileId })
+                .IsUnique();
         }
     }
 
@@ -57,6 +63,7 @@ namespace Servers.Database
         public long CreateDate { get; set; }
         public long LocationId { get; set; }
         public List<Rating> Ratings { get; set; }
+        public string FileHash { get; set; }
     }
 
     public class Rating
@@ -67,5 +74,13 @@ namespace Servers.Database
         public int FileId { get; set; }
         public uint UserId { get; set; }
         public float Stars { get; set; }
+    }
+
+    public class Bookmark
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int BookmarkId { get; set; }
+        public uint UserId { get; set; }
+        public int FileId { get; set; }
     }
 }

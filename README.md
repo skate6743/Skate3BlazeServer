@@ -1,5 +1,5 @@
 # Skate 3 Custom Blaze Server
-Skate 3 custom Blaze server for RPCS3/PS3 with working matchmaking and content server features.
+Skate 3 Custom Blaze server for RPCS3/PS3 with working matchmaking and content server features.
 # Features
 * Functional matchmaking and player invites from friends list ingame
 * Relay servers for each lobby (no Peer to Peer connections between players)

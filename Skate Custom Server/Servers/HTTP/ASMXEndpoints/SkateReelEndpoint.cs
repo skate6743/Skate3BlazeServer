@@ -10,7 +10,23 @@ namespace Servers.HTTP.ASMXEndpoints
 {
     public class SkateReelEndpoint
     {
-        public static async Task<int> HandleUpload(HttpListenerContext ctx)
+        private static (string extension, string pathName)? TypeIdToExtension(FileType type)
+        {
+            switch (type)
+            {
+                case FileType.SKATEPARK:
+                    return (".bin", "SKATEPARK");
+                case FileType.PHOTO:
+                    return (".jpg", "PHOTO");
+                case FileType.VIDEO:
+                    return (".flv", "VIDEO");
+                default:
+                    return null;
+            }
+        }
+
+
+        public static async Task<int> Upload(HttpListenerContext ctx)
         {
             User? user = HttpUtils.GetAuthenticatedUser(ctx);
             if (user == null)
@@ -21,7 +37,8 @@ namespace Servers.HTTP.ASMXEndpoints
             if (!int.TryParse(parser.GetParameterValue("typeId"), out int typeId))
                 return -1;
 
-            if (typeId != (int)FileType.SKATEPARK)
+            var fileTypeInfo = TypeIdToExtension((FileType)typeId);
+            if (fileTypeInfo == null)
                 return 0;
 
             if (!long.TryParse(parser.GetParameterValue("locationId"), out long locationId))
@@ -36,17 +53,32 @@ namespace Servers.HTTP.ASMXEndpoints
                 return -1;
 
             var thumbnail = parser.Files.FirstOrDefault(f => f.Name == "thumbnail");
-            var parkFile = parser.Files.FirstOrDefault(f => f.Name == "file");
+            var file = parser.Files.FirstOrDefault(f => f.Name == "file");
 
-            if (thumbnail == null || parkFile == null)
+            if (thumbnail == null || file == null)
                 return -1;
 
-            long totalSize = thumbnail.Data.Length + parkFile.Data.Length;
-            if (totalSize > 512000) // Limit upload size to 512kb
+            long totalSize = thumbnail.Data.Length + file.Data.Length;
+            if (totalSize > ServerGlobals.UploadSizeCap) // Limit upload size
                 return -1;
 
             await using var db = new AppDbContext();
-            var file = new FilesDbData
+
+            int userUploadCount = db.Files.Where(x => x.UploaderId == user.UserIdentification.BlazeId && x.Type == (FileType)typeId).Count();
+
+            if (userUploadCount >= ServerGlobals.ContentUploadCap)
+                return -1;
+
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            byte[] hashBytes = sha256.ComputeHash(file.Data);
+            string hash = Convert.ToHexString(hashBytes).ToLower();
+            file.Data.Position = 0; // Reset for later copy
+
+            // Prevent user from uploading identical park files
+            if (await db.Files.AnyAsync(f => f.FileHash == hash && f.UploaderId == user.UserIdentification.BlazeId))
+                return -2;
+
+            var newFileData = new FilesDbData
             {
                 UploaderId = user.UserIdentification.BlazeId,
                 UploaderName = user.UserIdentification.Name,
@@ -54,21 +86,22 @@ namespace Servers.HTTP.ASMXEndpoints
                 Tags = tags,
                 LocationId = locationId,
                 Description = description,
-                CreateDate = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                CreateDate = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                FileHash = hash
             };
-            db.Files.Add(file);
+            db.Files.Add(newFileData);
             await db.SaveChangesAsync();
 
-            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"wwwroot/skate3/content/PS3/SKATEPARK/{user.UserIdentification.BlazeId}/{file.FileId}");
+            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"wwwroot/skate3/content/PS3/{fileTypeInfo.Value.pathName}/{user.UserIdentification.BlazeId}/{newFileData.FileId}");
             Directory.CreateDirectory(dir);
 
-            using (var fs = File.Create($"{dir}/{file.FileId}_thumb.jpg"))
+            using (var fs = File.Create($"{dir}/{newFileData.FileId}_thumb.jpg"))
                 await thumbnail.Data.CopyToAsync(fs);
 
-            using (var fs = File.Create($"{dir}/{file.FileId}.bin"))
-                await parkFile.Data.CopyToAsync(fs);
+            using (var fs = File.Create($"{dir}/{newFileData.FileId}{fileTypeInfo.Value.extension}"))
+                await file.Data.CopyToAsync(fs);
 
-            return file.FileId;
+            return newFileData.FileId;
         }
 
         private static float GetRating(FilesDbData file)
@@ -78,17 +111,37 @@ namespace Servers.HTTP.ASMXEndpoints
                 : 0;
         }
 
+        public static async Task<string> GetOneContent(HttpListenerContext ctx)
+        {
+            int.TryParse(ctx.Request.QueryString["fileId"], out int fileId);
+
+            if (fileId <= 0)
+                return "";
+
+            await using var db = new AppDbContext();
+            FilesDbData? file = db.Files.Include(f => f.Ratings).Where(x=>x.FileId == fileId).FirstOrDefault();
+
+            if (file == null)
+                return "";
+
+            return FileDatasToXml(new List<FilesDbData> { file }).Replace("<ContentInfoContainer>", "<ContentInfo>").Replace("</ContentInfoContainer>", "</ContentInfo>");
+        }
+
         public static string FileDatasToXml(List<FilesDbData> Files)
         {
             var container = new XElement("ContentInfoContainer",
                 Files.Select(file =>
                     {
-                        string basePath = $"/skate3/content/PS3/SKATEPARK/{file.UploaderId}/{file.FileId}/{file.FileId}";
+                        var extensionInfo = TypeIdToExtension(file.Type);
+                        if (extensionInfo == null)
+                            return null;
+
+                        string basePath = $"/skate3/content/PS3/{extensionInfo.Value.pathName}/{file.UploaderId}/{file.FileId}/{file.FileId}";
                         string[] tags = file.Tags.Replace(" ", "").Split(',');
 
                         return new XElement("content",
                             new XElement("fileId", file.FileId),
-                            new XElement("fileType", "SKATEPARK"),
+                            new XElement("fileType", extensionInfo.Value.pathName),
                             new XElement("ownerId", file.UploaderId),
                             new XElement("ownerName", file.UploaderName),
                             new XElement("locationId", file.LocationId),
@@ -99,7 +152,7 @@ namespace Servers.HTTP.ASMXEndpoints
                             new XElement("rankType", "RECENT"),
                             new XElement("fileSize", 123),
                             tags.Length == 5 ? Enumerable.Range(0, 5).Select(i => new XElement($"tag{i + 1}", tags[i])) : null,
-                            new XElement("contentUri", basePath + ".bin"),
+                            new XElement("contentUri", basePath + extensionInfo.Value.extension),
                             new XElement("thumbnailUri", basePath + "_thumb.jpg"),
                             new XElement("highResThumbnailUri", basePath + "_thumb.jpg"),
                             new XElement("createDate", file.CreateDate),
@@ -122,10 +175,11 @@ namespace Servers.HTTP.ASMXEndpoints
             if (pagination == null)
                 return "";
 
-            int rankingId = -1;
-            int.TryParse(ctx.Request.QueryString["rankingId"], out rankingId);
+            int.TryParse(ctx.Request.QueryString["rankingId"], out int rankingId);
 
-            if (rankingId == -1)
+            int.TryParse(ctx.Request.QueryString["typeId"], out int typeId);
+
+            if (typeId <= 0)
                 return "";
 
             await using var db = new AppDbContext();
@@ -134,7 +188,7 @@ namespace Servers.HTTP.ASMXEndpoints
 
             List<FilesDbData> files = db.Files
                 .Include(f => f.Ratings)
-                .Where(f => f.Type == FileType.SKATEPARK)
+                .Where(f => f.Type == (FileType)typeId)
                 .ToList();
 
             switch (type)
@@ -158,15 +212,17 @@ namespace Servers.HTTP.ASMXEndpoints
         public static async Task<string> GetFeaturedContent(HttpListenerContext ctx)
         {
             var pagination = HttpUtils.ParsePagination(ctx);
-
-            if (pagination == null)
+            int.TryParse(ctx.Request.QueryString["typeId"], out int typeId);
+            
+            if (pagination == null || typeId <= 0)
                 return "";
+
 
             await using var db = new AppDbContext();
 
             return FileDatasToXml(db.Files
                 .Include(f => f.Ratings)
-                .Where(f => f.Type == FileType.SKATEPARK)
+                .Where(f => f.Type == (FileType)typeId)
                 .Skip(pagination.Value.start)
                 .Take(pagination.Value.end - pagination.Value.start)
                 .ToList());
@@ -190,18 +246,22 @@ namespace Servers.HTTP.ASMXEndpoints
 
         public static async Task GetFileContent(HttpListenerContext ctx)
         {
-            int fileId = -1;
-            int.TryParse(ctx.Request.QueryString["fileId"], out fileId);
-            if (fileId == -1) return;
+            int.TryParse(ctx.Request.QueryString["fileId"], out int fileId);
+            if (fileId <= 0) return;
 
             await using var db = new AppDbContext();
 
             var file = await db.Files.FindAsync(fileId);
-            if (file == null) return;
+            if (file == null)
+                return;
+
+            var extensionInfo = TypeIdToExtension(file.Type);
+            if (extensionInfo == null)
+                return;
 
             string path = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
-                $"wwwroot/skate3/content/PS3/SKATEPARK/{file.UploaderId}/{file.FileId}/{file.FileId}.bin"
+                $"wwwroot/skate3/content/PS3/{extensionInfo.Value.pathName}/{file.UploaderId}/{file.FileId}/{file.FileId}{extensionInfo.Value.extension}"
             );
 
             if (!await HttpUtils.ServeFile(ctx, path)) return;
@@ -211,7 +271,7 @@ namespace Servers.HTTP.ASMXEndpoints
             await db.SaveChangesAsync();
         }
 
-        public static async Task Delete(HttpListenerContext ctx)
+        public static async Task<string> Delete(HttpListenerContext ctx)
         {
             using var reader = new StreamReader(ctx.Request.InputStream);
             string body = await reader.ReadToEndAsync();
@@ -219,19 +279,25 @@ namespace Servers.HTTP.ASMXEndpoints
 
             int fileId = -1;
             int.TryParse(parsed["fileId"], out fileId);
-            if (fileId == -1) return;
+            if (fileId == -1)
+                return "";
 
             User? user = HttpUtils.GetAuthenticatedUser(ctx);
             if (user == null)
-                return;
+                return "";
 
             await using var db = new AppDbContext();
 
             FilesDbData? file = await db.Files.FindAsync(fileId);
 
             if (file == null || file.UploaderId != user.UserIdentification.BlazeId)
-                return;
+                return "";
 
+            // Remove existing bookmarks for this file
+            var bookmarks = db.Bookmarks.Where(b => b.FileId == fileId).ToList();
+            db.Bookmarks.RemoveRange(bookmarks);
+
+            // Remove file itself from database
             db.Files.Remove(file);
             await db.SaveChangesAsync();
 
@@ -242,6 +308,8 @@ namespace Servers.HTTP.ASMXEndpoints
 
             if (Directory.Exists(pathToDelete))
                 Directory.Delete(pathToDelete, true);
+
+            return new XElement("IntegerContainer", new XElement("value", "0")).ToString();
         }
 
         public static async Task<string> Vote(HttpListenerContext ctx)
@@ -265,7 +333,7 @@ namespace Servers.HTTP.ASMXEndpoints
 
             await using var db = new AppDbContext();
 
-            FilesDbData file = await db.Files.Include(f => f.Ratings).FirstOrDefaultAsync(f => f.FileId == fileId);
+            FilesDbData? file = await db.Files.Include(f => f.Ratings).FirstOrDefaultAsync(f => f.FileId == fileId);
             if (file == null) return "0";
 
             if (!file.Ratings.Any(x=>x.UserId == reviewerId))
@@ -282,12 +350,85 @@ namespace Servers.HTTP.ASMXEndpoints
             }
             else
             {
-                // Update current rating for user
+                // Update existing rating for user
                 file.Ratings.Where(x => x.UserId == reviewerId).First().Stars = rating;
             }
 
             await db.SaveChangesAsync();
             return "1";
+        }
+
+        public static async Task<string> GetBookmarkedContent(HttpListenerContext ctx)
+        {
+            if (!uint.TryParse(ctx.Request.QueryString["userId"], out uint userId))
+                return "";
+
+            await using var db = new AppDbContext();
+
+            var bookmarkedFileIds = db.Bookmarks
+                .Where(b => b.UserId == userId)
+                .Select(b => b.FileId)
+                .ToList();
+
+            return FileDatasToXml(db.Files
+                .Include(f => f.Ratings)
+                .Where(f => bookmarkedFileIds.Contains(f.FileId))
+                .ToList());
+        }
+
+        public static async Task<string> AddBookmark(HttpListenerContext ctx)
+        {
+            string failedReponse = new XElement("IntegerContainer", new XElement("value", "0")).ToString();
+
+            using var reader = new StreamReader(ctx.Request.InputStream);
+            string body = await reader.ReadToEndAsync();
+            var parsed = System.Web.HttpUtility.ParseQueryString(body);
+
+            if (!int.TryParse(parsed["fileId"], out int fileId))
+                return failedReponse;
+
+            User? user = HttpUtils.GetAuthenticatedUser(ctx);
+            if (user == null)
+                return failedReponse;
+
+            uint userId = user.UserIdentification.BlazeId;
+
+            await using var db = new AppDbContext();
+
+            if (await db.Bookmarks.AnyAsync(b => b.UserId == userId && b.FileId == fileId))
+                return failedReponse;
+
+            db.Bookmarks.Add(new Bookmark
+            {
+                UserId = userId,
+                FileId = fileId
+            });
+
+            await db.SaveChangesAsync();
+            return new XElement("IntegerContainer", new XElement("value", "1")).ToString();
+        }
+
+        public static async Task DeleteBookmark(HttpListenerContext ctx)
+        {
+            using var reader = new StreamReader(ctx.Request.InputStream);
+            string body = await reader.ReadToEndAsync();
+            var parsed = System.Web.HttpUtility.ParseQueryString(body);
+
+            if (!int.TryParse(parsed["fileId"], out int fileId))
+                return;
+
+            User? user = HttpUtils.GetAuthenticatedUser(ctx);
+            if (user == null)
+                return;
+
+            await using var db = new AppDbContext();
+
+            var bookmark = await db.Bookmarks.FirstOrDefaultAsync(b => b.UserId == user.UserIdentification.BlazeId && b.FileId == fileId);
+            if (bookmark == null)
+                return;
+
+            db.Bookmarks.Remove(bookmark);
+            await db.SaveChangesAsync();
         }
     }
 }

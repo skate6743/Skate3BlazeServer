@@ -1,4 +1,6 @@
-﻿using Servers.Blaze.Models;
+﻿using Org.BouncyCastle.Asn1.Cms;
+using Servers.Blaze.Models;
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
@@ -7,35 +9,43 @@ namespace Servers
 {
     public class RelayServer
     {
-        private short _port = 17000;
+        public readonly short Port;
+        private readonly Game _game;
+        private readonly ConcurrentDictionary<uint, IPEndPoint> _whitelistedUsers = new();
+        private readonly ConcurrentDictionary<IPEndPoint, uint> _endpointToUser = new();
+
         private UdpClient? _udpClient;
-        private Task _serverTask;
-        private readonly ConcurrentDictionary<IPEndPoint, DateTime> _players = new();
+        private Task? _serverTask;
         private CancellationTokenSource? _cts;
-        private Game _game;
-        private ConcurrentBag<IPEndPoint> _whitelistedIps = new ConcurrentBag<IPEndPoint>();
+
+        public RelayServer(Game game, short port)
+        {
+            Port = port;
+            _game = game;
+        }
 
         public void Start()
         {
             _cts = new CancellationTokenSource();
-            _udpClient = new UdpClient(_port);
+            _udpClient = new UdpClient(Port);
             _serverTask = RunAsync(_cts.Token);
         }
 
         public async Task StopAsync()
         {
-            if (_cts == null || _udpClient == null)
+            if (_cts == null || _udpClient == null || _serverTask == null)
                 return;
-            await _cts.CancelAsync();
-            await _serverTask;
-            _udpClient.Close();
-            _cts.Dispose();
-        }
-
-        public RelayServer(Game game, short port)
-        {
-            _port = port;
-            _game = game;
+            try
+            {
+                await _cts.CancelAsync();
+                await _serverTask;
+            }
+            catch { }
+            finally
+            {
+                _udpClient.Close();
+                _cts.Dispose();
+            }
         }
 
         private async Task RunAsync(CancellationToken ct)
@@ -43,52 +53,70 @@ namespace Servers
             while (true)
             {
                 UdpReceiveResult result;
-                try { result = await _udpClient.ReceiveAsync(ct); }
+                try { result = await _udpClient!.ReceiveAsync(ct); }
                 catch (OperationCanceledException) { break; }
                 catch (ObjectDisposedException) { break; }
                 catch (SocketException) { continue; }
-                _= UdpSendBack(_udpClient, result);
+
+                _ = ProcessPacketAsync(_udpClient, result);
             }
         }
 
-        private async Task UdpSendBack(UdpClient udp, UdpReceiveResult result)
+        private bool WhitelistFromRegistrationPacket(IPEndPoint ep, byte[] buf)
+        {
+            uint blazeId = BinaryPrimitives.ReadUInt32BigEndian(buf.AsSpan(8));
+
+            if (_whitelistedUsers.TryAdd(blazeId, ep))
+            {
+                _endpointToUser.TryAdd(ep, blazeId);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool RemoveFromWhitelistedUser(uint blazeId)
+        {
+            if (_whitelistedUsers.TryRemove(blazeId, out var ep))
+            {
+                _endpointToUser.TryRemove(ep, out _);
+                return true;
+            }
+            return false;
+        }
+
+        private async Task ProcessPacketAsync(UdpClient udp, UdpReceiveResult result)
         {
             try
             {
                 var buf = result.Buffer;
-                if (result.RemoteEndPoint is IPEndPoint ep)
+                if (result.RemoteEndPoint is not IPEndPoint ep)
+                    return;
+
+                if (buf.Length > 7000 || buf.Length < 16)
+                    return;
+
+                ushort receiverIdOffset = 0x0C;
+
+                if (_game.PlayersInQueue > 0)
                 {
-                    if (buf.Length > 5000)
-                        return;
-
-                    if (_game.PlayersInQueue > 0 && _players.Count < 11)
+                    // Validate incoming packet is a registration packet (first packet game ever sends)
+                    if (buf[0] == 1 && buf[1] == 0 && buf[2] == 0 && buf.Length == 20)
                     {
-                        if (!_whitelistedIps.Contains(ep))
-                        {
-                            _whitelistedIps.Add(ep);
-                        }
+                        if (!_endpointToUser.ContainsKey(ep))
+                            WhitelistFromRegistrationPacket(ep, buf);
+
+                        receiverIdOffset = 0x10;
                     }
-
-                    if (!_whitelistedIps.Contains(ep))
-                        return;
-
-                    _players[ep] = DateTime.UtcNow;
-
-                    var stale = _players.Where(kv => (DateTime.UtcNow - kv.Value).TotalSeconds >= 5).ToList();
-                    foreach (var kv in stale)
-                    {
-                        _players.TryRemove(kv.Key, out _);
-                    }
-
-
-                    var tasks = _players.Keys
-                        .Where(receiver => !receiver.Equals(ep))
-                        .Select(receiver => udp.SendAsync(buf, buf.Length, receiver));
-
-                    await Task.WhenAll(tasks);
                 }
+
+                uint receiverId = BinaryPrimitives.ReadUInt32BigEndian(buf.AsSpan(receiverIdOffset));
+
+                if (_whitelistedUsers.TryGetValue(receiverId, out var targetEp))
+                    await udp.SendAsync(buf, buf.Length, targetEp);
             }
-            catch { }
+            catch (ObjectDisposedException) { }
+            catch (SocketException) { }
         }
     }
 }

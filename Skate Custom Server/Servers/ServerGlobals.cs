@@ -10,12 +10,12 @@ namespace Servers
         public static ushort ServerPort = 42100;
         public static ushort HttpServerPort = 80;
         public static uint PingPeriodSecs = 20;
+        public static int ContentUploadCap = 100;
+        public static uint UploadSizeCap = 10_000_000;
 
         public static ConcurrentDictionary<uint, User> Users = new();
         public static ConcurrentDictionary<uint, Game> Games = new();
         public static ConcurrentDictionary<Game, RelayServer> LobbyRelayServers = new();
-
-        public static List<byte[]> CachedRequests = new List<byte[]>();
 
         private static int _gameIdCounter = 0;
         public static uint GetNextGameId()

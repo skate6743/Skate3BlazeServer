@@ -37,7 +37,7 @@ namespace Blaze.Components.Gamemanager.Handlers
 
                     _ = Task.Run(async () =>
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(20));
+                        await Task.Delay(TimeSpan.FromSeconds(15));
                         user.CurrentGame.RemoveFromQueue();
                     });
                 }

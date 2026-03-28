@@ -9,8 +9,7 @@ Below are explanations for each one:
 Mandatory server for authentication flow, serves a PS3.xml config file (found in the wwwroot folder), which contains online related variables such as map moving timers, etc. and you can freely edit these in the .xml file.
 
 
-The HTTP server also provides a XML which includes the UDP QoS server port and IP (when game makes a request to "qos/qos"), this 
-is mandatory for the game to know where to send those UDP requests during QoS tests and matchmaking won't work without it.
+The HTTP server is also responsible for handling all .asmx endpoints the game tries to reach out to (SkateReel.asmx, SkateProfile.asmx, etc.) and you can find implementations for these in the ASMXEndpoints folder.
 
 ## RelayServer.cs
 Relay server used for lobbies to prevent players connecting via Peer to Peer. These relay servers fix NAT type compatibility issues when matchmaking and protect players IPs from being exposed to each other.
