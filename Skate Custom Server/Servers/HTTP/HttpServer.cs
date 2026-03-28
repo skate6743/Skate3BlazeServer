@@ -92,21 +92,34 @@ namespace Servers.HTTP
                 HttpListenerContext ctx;
                 try { ctx = await _listener.GetContextAsync().WaitAsync(ct); }
                 catch (TaskCanceledException) { break; }
+                catch (OperationCanceledException) { break; }
+                catch (ObjectDisposedException) { break; }
+                catch (HttpListenerException ex) { ServerLogger.Log($"HttpListener error (continuing): {ex.Message}"); continue; }
+                catch (Exception ex) { ServerLogger.Log($"HTTP accept error (continuing): {ex.Message}"); continue; }
 
-                string remoteIP = ctx.Request.RemoteEndPoint.Address.ToString();
-                if (IsBlacklisted(remoteIP))
+                try
                 {
-                    ctx.Response.Close();
+                    string remoteIP = ctx.Request.RemoteEndPoint.Address.ToString();
+                    if (IsBlacklisted(remoteIP))
+                    {
+                        try { ctx.Response.Close(); } catch { }
+                        continue;
+                    }
+
+                    if (ctx.Request.ContentLength64 > 1_048_576)
+                    {
+                        try { ctx.Response.Close(); } catch { }
+                        continue;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log($"HTTP pre-handler error: {ex.Message}");
+                    try { ctx.Response.Close(); } catch { }
                     continue;
                 }
 
-                if (ctx.Request.ContentLength64 > 1_048_576)
-                {
-                    ctx.Response.Close();
-                    continue;
-                }
-
-                _ = Task.Run(async() => {
+                _ = Task.Run(async () => {
                     try
                     {
                         var req = ctx.Request;
@@ -184,7 +197,7 @@ namespace Servers.HTTP
                                     responseContent = new XElement("IntegerContainer", new XElement("value", "0")).ToString();
                                     break;
                                 case "GetCategoriesAndTags":
-                                    responseContent = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot\\skate3\\config\\CategoriesAndTags.xml"));
+                                    responseContent = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "skate3", "config", "CategoriesAndTags.xml"));
                                     break;
                                 case "GetNumFilesForBrowser2":
                                     responseContent = new XElement("IntegerContainer", new XElement("value", "69")).ToString();
