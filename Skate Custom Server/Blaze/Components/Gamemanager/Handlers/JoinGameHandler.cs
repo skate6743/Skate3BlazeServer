@@ -28,6 +28,7 @@ namespace Blaze.Components.Gamemanager.Handlers
 
             await matchmaker.Stream.WriteAsync(response.Serialize());
 
+            matchmaker.IsMatchmaking = true;
             await GameManagerUtils.UserJoinGame(matchmaker, inviterUser.CurrentGame, false);
         }
     }

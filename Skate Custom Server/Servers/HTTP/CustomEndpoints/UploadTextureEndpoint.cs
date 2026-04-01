@@ -27,6 +27,11 @@ namespace Servers.HTTP.CustomEndpoints
 
             await using var db = new AppDbContext();
 
+            int count = db.Files.Where(x => x.UploaderId == user.UserIdentification.BlazeId && x.Type == FileType.RTEX_PS3).Count();
+
+            if (count > 5000)
+                return "Error too many textures uploaded";
+
             using var sha256 = System.Security.Cryptography.SHA256.Create();
             byte[] hashBytes = sha256.ComputeHash(file.Data);
             string hash = Convert.ToHexString(hashBytes).ToLower();
@@ -52,7 +57,7 @@ namespace Servers.HTTP.CustomEndpoints
             db.Files.Add(newFileData);
             await db.SaveChangesAsync();
 
-            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"wwwroot/skate3/content/PS3/RTEX_PS3/{user.UserIdentification.BlazeId}/{newFileData.FileId}");
+            string dir = Path.Combine(ServerGlobals.BaseDirectory, $"wwwroot/skate3/content/PS3/RTEX_PS3/{user.UserIdentification.BlazeId}/{newFileData.FileId}");
             Directory.CreateDirectory(dir);
 
             using (var fs = File.Create($"{dir}/{newFileData.FileId}.psg"))

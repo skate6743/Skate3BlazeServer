@@ -136,7 +136,7 @@ namespace Blaze.Components.Gamemanager
 
         public static async Task ConfirmPlayerConnectivity(User user, Game game)
         {
-            await Task.Delay(20000);
+            await Task.Delay(23000);
 
             if (user.GamePlayer != null && user.CurrentGame != null && user.CurrentGame == game)
             {
@@ -161,14 +161,15 @@ namespace Blaze.Components.Gamemanager
                 DisplayName = user.Session.PersonaDetails.DisplayName,
                 NetworkQosData = user.ExtendedData.QosData,
                 PlayerAttributes = new Dictionary<string, string> { { "dlc_mask", "499" } },
-                PlayerId = user.Session.BlazeId,
-                PlayerNetwork = new NetworkAddress { }, // Empty NetworkAddress union to force Dirtycast connection
+                PlayerId = user.Session.BlazeId, // Generate random Blaze Id in games for name spoofs to show (not load from cache after lookupUsers request)
+                PlayerNetwork = new NetworkAddress { }, // Empty NetworkAddress union to force relay server connection
                 SlotId = slotId,
                 SlotType = 0,
                 PlayerState = creatingGame ? (int)PlayerState.ACTIVE_CONNECTED : (int)PlayerState.ACTIVE_CONNECTING,
                 Team = 0xFFFF,
                 TeamIndex = 0xFFFF,
-                JoinDate = epochMicroseconds
+                JoinDate = epochMicroseconds,
+                ExternalId = user.Session.PersonaDetails.ExternalRef
             };
         }
 

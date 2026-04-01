@@ -8,12 +8,14 @@ namespace Blaze.Components.AssociationLists
     {
         public static async Task HandleRequest(User user, byte[] packetBytes)
         {
+            var responseModel = new AssociationListCollectionInfo
+            {
+                AssociationListInfoByNameMap = new Dictionary<string, AssociationListInfo>()
+            };
+
             BlazeMessage response = BlazeMessage.CreateResponseFromModel(
                 packetBytes,
-                new AssociationListCollectionInfo
-                {
-                    AssociationListInfoByNameMap = new Dictionary<string, AssociationListInfo>()
-                });
+                responseModel);
 
             await user.Stream.WriteAsync(response.Serialize());
         }

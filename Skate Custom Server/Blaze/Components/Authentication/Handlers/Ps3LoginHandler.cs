@@ -1,5 +1,7 @@
 ﻿using Blaze.Components.Authentication.Commands;
 using Blaze.Components.Authentication.Models;
+using Blaze.Components.Gamemanager;
+using Blaze.Components.Gamemanager.Models;
 using Blaze.Components.UserSessions.Models;
 using Microsoft.EntityFrameworkCore;
 using NPTicket;
@@ -16,7 +18,7 @@ namespace Blaze.Components.Authentication
     {
         public static bool UserBanned(string username)
         {
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bannedusers.txt");
+            string path = Path.Combine(ServerGlobals.BaseDirectory, "bannedusers.txt");
             if (File.Exists(path))
             {
                 string[] lines = File.ReadAllLines(path);
@@ -31,6 +33,32 @@ namespace Blaze.Components.Authentication
             public override string PublicKeyY => "93131936a54a0ea51117f74518e56aae95f6baff4b29f999";
         }
 
+        private static bool IsTicketValid(Ticket ps3Ticket, byte[] ticketBytes, User user)
+        {
+            if (ps3Ticket.ExpiryDate < DateTimeOffset.UtcNow)
+                return false;
+
+            // RPCN Ticket Verifying
+            var verifier = new TicketVerifier(ticketBytes, ps3Ticket, RpcnSigningKey.Instance);
+            if (verifier.IsTicketValid())
+            {
+                user.Platform = UserPlatform.RPCS3;
+                return true;
+            }
+            else
+            {
+                // PS3 Ticket Verifying if RPCN ticket came back invalid
+                verifier = new TicketVerifier(ticketBytes, ps3Ticket, new SkateSigningKey());
+                if (verifier.IsTicketValid())
+                {
+                    user.Platform = UserPlatform.PS3;
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
         public static async Task HandleRequest(User user, byte[] packetBytes)
         {
             var loginRequest = BlazeMessage.CreateModelFromRequest<Ps3LoginRequest>(packetBytes);
@@ -40,25 +68,19 @@ namespace Blaze.Components.Authentication
             if (UserBanned(ps3Ticket.Username))
                 return;
 
-            // RPCN Ticket Verifying
-            var verifier = new TicketVerifier(loginRequest.ps3Ticket, ps3Ticket, RpcnSigningKey.Instance);
-            if (verifier.IsTicketValid())
+            if (!IsTicketValid(ps3Ticket, loginRequest.ps3Ticket, user))
             {
-                user.Platform = UserPlatform.RPCS3;
+                await ServerUtils.SendError(user, packetBytes, ServerUtils.ErrorCode.AUTH_ERR_INVALID_PS3_TICKET);
+                return;
             }
-            else
+
+            // Allow single session per PSN ID
+            var existing = ServerGlobals.Users.Values.FirstOrDefault(u =>
+                u.Session.PersonaDetails.ExternalRef == ps3Ticket.UserId && u.Platform == user.Platform);
+
+            if (existing != null)
             {
-                // PS3 Ticket Verifying if RPCN ticket came back invalid
-                verifier = new TicketVerifier(loginRequest.ps3Ticket, ps3Ticket, new SkateSigningKey());
-                if (verifier.IsTicketValid())
-                {
-                    user.Platform = UserPlatform.PS3;
-                }
-                else
-                {
-                    await ServerUtils.SendError(user, packetBytes, ServerUtils.ErrorCode.AUTH_ERR_INVALID_PS3_TICKET);
-                    return;
-                }
+                try { existing.Stream.Close(); } catch { }
             }
 
             ServerLogger.LogSignIn(ps3Ticket.Username);
@@ -99,7 +121,7 @@ namespace Blaze.Components.Authentication
             user.Session = sessionDetails;
             user.ExtendedData = new UserSessionExtendedData
             {
-                DataMap = new Dictionary<uint, uint> { { 458823, 0 } } // enUS locale
+                DataMap = new Dictionary<uint, uint> { { 458823, 0 } }
             };
 
             user.UserIdentification = new UserIdentification
@@ -109,7 +131,8 @@ namespace Blaze.Components.Authentication
                 BlazeId = user.Session.BlazeId,
                 IsOnline = true,
                 Name = user.Session.PersonaDetails.DisplayName,
-                PersonaId = user.Session.PersonaDetails.PersonaId
+                PersonaId = user.Session.PersonaDetails.PersonaId,
+                ExternalId = sessionDetails.PersonaDetails.ExternalRef
             };
 
             user.IsAuthenticated = true;

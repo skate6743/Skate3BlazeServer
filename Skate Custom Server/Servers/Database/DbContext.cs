@@ -14,7 +14,7 @@ namespace Servers.Database
         public DbSet<Bookmark> Bookmarks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite("Data Source=skate.db");
+            => options.UseSqlite($"Data Source={Path.Combine(ServerGlobals.BaseDirectory, "skate.db")}");
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

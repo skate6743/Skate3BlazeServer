@@ -3,9 +3,12 @@ using Blaze.Components.UserSessions.Models;
 
 namespace Blaze.Components.UserSessions.Commands
 {
-    public struct LookupUsersResponse
+    public struct LookupUsersRequest
     {
+        [TdfMember("LTYP")]
+        public int LookupType;
+
         [TdfMember("ULST")]
-        public List<UserData> UserDataList;
+        public List<UserIdentification> UserIdentificationList;
     }
 }

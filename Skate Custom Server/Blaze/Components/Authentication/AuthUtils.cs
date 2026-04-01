@@ -1,6 +1,7 @@
 ﻿using Blaze.Components.Authentication.Models;
 using Newtonsoft.Json;
 using NPTicket;
+using Servers;
 using System.Security.Cryptography;
 
 namespace Blaze.Components.Authentication
@@ -10,13 +11,18 @@ namespace Blaze.Components.Authentication
         // Random Blaze token generation
         public static string GenerateToken()
         {
-            Span<byte> prefix = stackalloc byte[4];
-            Span<byte> suffix = stackalloc byte[16];
+            string token;
+            do
+            {
+                Span<byte> prefix = stackalloc byte[4];
+                Span<byte> suffix = stackalloc byte[16];
+                RandomNumberGenerator.Fill(prefix);
+                RandomNumberGenerator.Fill(suffix);
+                token = $"{Convert.ToHexString(prefix).ToLower()}_{Convert.ToHexString(suffix).ToLower()}";
+            }
+            while (ServerGlobals.Users.Values.Any(u => u.Session.BlazeToken == token));
 
-            RandomNumberGenerator.Fill(prefix);
-            RandomNumberGenerator.Fill(suffix);
-
-            return $"{Convert.ToHexString(prefix).ToLower()}_{Convert.ToHexString(suffix).ToLower()}";
+            return token;
         }
 
         public static SessionDetails CreateNewSessionDetails(Ticket ps3Ticket, uint blazeId)
@@ -25,8 +31,7 @@ namespace Blaze.Components.Authentication
 
             string displayName = ps3Ticket.Username;
 
-            string basePath = AppDomain.CurrentDomain.BaseDirectory;
-            string usernamesPath = Path.Combine(basePath, "spoofed_usernames.json");
+            string usernamesPath = Path.Combine(ServerGlobals.BaseDirectory, "spoofed_usernames.json");
 
             if (File.Exists(usernamesPath))
             {
@@ -51,7 +56,9 @@ namespace Blaze.Components.Authentication
                 {
                     DisplayName = displayName,
                     LastLoginTime = 0,
-                    PersonaId = blazeId
+                    PersonaId = blazeId,
+                    ExternalRef = ps3Ticket.UserId,
+                    ExternalRefType = 0x2
                 }
             };
         }

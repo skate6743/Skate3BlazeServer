@@ -24,7 +24,7 @@ namespace Servers.HTTP.ASMXEndpoints
 
             uint userId = user.UserIdentification.BlazeId;
 
-            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot/skate3/content/PS3/SCHEMA");
+            string dir = Path.Combine(ServerGlobals.BaseDirectory, "wwwroot/skate3/content/PS3/SCHEMA");
             Directory.CreateDirectory(dir);
 
             using (var fs = File.Create(Path.Combine(dir, $"{userId}.bin")))
@@ -40,7 +40,7 @@ namespace Servers.HTTP.ASMXEndpoints
             if (userId == -1) return;
 
             string path = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
+                ServerGlobals.BaseDirectory,
                 $"wwwroot/skate3/content/PS3/SCHEMA/{userId}.bin"
             );
 

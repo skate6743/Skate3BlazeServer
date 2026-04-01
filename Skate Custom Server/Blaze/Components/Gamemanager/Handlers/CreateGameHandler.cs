@@ -115,7 +115,7 @@ namespace Blaze.Components.Gamemanager.Handlers
                 TopologyHost = topologyHostInfo,
                 PlatformHost = platformHostInfo,
                 QueueCapacity = request.QueueCapacity,
-                VoipTopology = (int)VoipTopology.VOIP_DEDICATED_SERVER,
+                VoipTopology = (int)VoipTopology.VOIP_PEER_TO_PEER,
                 GameProtocolVersionString = request.GameProtocolVersionString
             };
 

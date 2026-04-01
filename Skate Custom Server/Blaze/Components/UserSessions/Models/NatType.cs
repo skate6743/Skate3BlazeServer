@@ -1,6 +1,4 @@
-﻿using Blaze.Tdf.Attributes;
-
-namespace Blaze.Components.UserSessions.Models
+﻿namespace Blaze.Components.UserSessions.Models
 {
     public enum NatType : int
     {

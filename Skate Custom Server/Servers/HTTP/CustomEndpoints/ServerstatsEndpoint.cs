@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Blaze.Components.Gamemanager.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Servers.Blaze.Models;
 using System.Net;
@@ -11,7 +12,7 @@ namespace Servers.HTTP.CustomEndpoints
         private static Dictionary<string, string> _challengeTypes = new Dictionary<string, string>
         {
             { "22", "Freeskate" },
-            { "33", "Hall of meat" },
+            { "33", "Hall of Meat" },
             { "53", "Spot Battle" },
             { "8", "Street Contest" },
             { "15", "Tranny Contest" },
@@ -31,14 +32,21 @@ namespace Servers.HTTP.CustomEndpoints
         {
             var converted = new Dictionary<string, string>();
 
+            bool isFreeskate = attributes.ContainsKey("is_free_skate") ? attributes["is_free_skate"] == "true" : false;
+
             foreach (var kv in attributes)
             {
                 switch (kv.Key)
                 {
                     case "difficulty_mode":
-                        int.TryParse(kv.Value, out int difficulty);
-                        if (difficulty >= 0 && difficulty < _difficulties.Length)
-                            converted.Add("Difficulty", _difficulties[difficulty]);
+                        if (!isFreeskate)
+                        {
+                            int.TryParse(kv.Value, out int difficulty);
+                            if (difficulty >= 0 && difficulty < _difficulties.Length)
+                            {
+                                converted.Add("Difficulty", _difficulties[difficulty]);
+                            }
+                        }
                         break;
                     case "challenge_type":
                         string challengeInfo = "";
@@ -63,6 +71,9 @@ namespace Servers.HTTP.CustomEndpoints
                 }
             }
 
+            if (!isFreeskate)
+                converted.Add("Status", game.GameData.GameState == (int)GameState.IN_GAME ? "In Game" : "Pre-Game");
+            
             converted.Add("Player Count", game.Players.Count.ToString());
 
             return converted;
@@ -70,7 +81,7 @@ namespace Servers.HTTP.CustomEndpoints
 
         static ServerstatsEndpoint()
         {
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "challenge_keys.json");
+            string path = Path.Combine(ServerGlobals.BaseDirectory, "wwwroot/challenge_keys.json");
             if (File.Exists(path))
                 _challengeKeys = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(path));
         }

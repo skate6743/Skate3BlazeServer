@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skate 3 — Serverstats</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Barlow+Condensed:wght@700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --o: #E87A20; --bg: #0C0C0E; --s: #141416; --b: #2A2A30; --t: #F0EDE8; --td: #5A5650; }
+
+  body { background: var(--bg); color: var(--t); font-family: 'Barlow', sans-serif; }
+  .c { max-width: 860px; margin: 0 auto; padding: 48px 28px 90px; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 48px; padding-bottom: 28px; border-bottom: 1px solid var(--b); }
+  .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 50px; color: var(--o); line-height: 1; }
+  .badge { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 8px #4ADE8088; animation: blink 2.5s infinite; }
+  .dot.off { background: var(--td); box-shadow: none; animation: none; }
+  @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+  .badge span { font-size: 14px; color: #9A958D; text-transform: uppercase; letter-spacing: 1.5px; }
+
+  .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 42px; }
+  .stat { background: var(--s); border: 1px solid var(--b); border-radius: 6px; padding: 22px; text-align: center; }
+  .stat b { font-family: 'Barlow Condensed', sans-serif; font-size: 42px; color: var(--o); display: block; line-height: 1; margin-bottom: 6px; }
+  .stat small { font-size: 13px; color: var(--td); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+
+  .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .bar h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; text-transform: uppercase; letter-spacing: 3px; color: #9A958D; }
+  .bar small { font-size: 12px; color: var(--td); text-transform: uppercase; letter-spacing: 1px; }
+
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .lob { background: var(--s); border: 1px solid var(--b); border-left: 3px solid var(--o); border-radius: 4px; padding: 20px 22px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 20px; animation: up .35s ease backwards; }
+  .lob:hover { background: #1E1E24; transform: translateX(2px); }
+  @keyframes up { from { opacity:0; transform:translateY(6px) } }
+  .lob h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 21px; margin-bottom: 8px; }
+  .tags { display: flex; gap: 20px; font-size: 14px; color: #9A958D; }
+  .tags span { color: var(--td); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-right: 5px; font-weight: 600; }
+  .pill { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: var(--o); background: #E87A2018; border: 1px solid #E87A2044; border-radius: 4px; padding: 8px 16px; }
+  .pbar { height: 3px; background: var(--b); border-radius: 1px; margin-top: 5px; }
+  .pfill { height: 100%; background: var(--o); border-radius: 1px; }
+
+  .empty { text-align: center; padding: 60px; color: var(--td); font-size: 16px; }
+  .err { background: #FF444412; border: 1px solid #FF444428; border-radius: 4px; padding: 12px 16px; font-size: 14px; color: #FF6B6B; margin-bottom: 16px; display: none; }
+</style>
+</head>
+<body>
+<div class="c">
+  <header>
+    <div class="logo">Skate 3 - Server Statistics</div>
+    <div class="badge">
+      <div class="dot" id="dot"></div>
+      <span id="lbl">Connecting</span>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b id="s1">—</b><small>Online</small></div>
+    <div class="stat"><b id="s2">—</b><small>Public Lobbies</small></div>
+    <div class="stat"><b id="s3">—</b><small>Total In Game</small></div>
+  </div>
+
+  <div class="err" id="err">Could not reach server — Retrying…</div>
+
+  <div class="bar">
+    <h2>Public Lobbies</h2>
+    <small id="rtag">updating…</small>
+  </div>
+
+  <div class="list" id="list">
+    <div class="empty">Loading…</div>
+  </div>
+</div>
+
+<script>
+  function inf(label, value) {
+    if (!value) return '';
+    if (label === 'Status') {
+        const color = value === 'Pre-Game' ? '#4ADE80' : '#FF6B6B';
+        return `<div><span>${label}</span><span style="color: ${color}">${esc(value)}</span></div>`;
+    }
+    return `<div><span>${label}</span>${esc(value)}</div>`;
+  }
+  async function poll() {
+    try {
+      const d = await (await fetch('/serverstats')).json();
+      s1.textContent = d['signed-in'] ?? 0;
+      s2.textContent = d['public-games'] ?? 0;
+      s3.textContent = d['in-lobbies'] ?? 0;
+      dot.classList.remove('off'); lbl.textContent = 'Online';
+      const g = d['game-infos'] ?? [];
+      list.innerHTML = g.length ? g.map((x, i) => {
+        const n = parseInt(x['Player Count']) || 0;
+        const tags = inf('Mode', x['Game Mode']) + inf('Difficulty', x['Difficulty']) + inf('Status', x['Status']);
+        return `<div class="lob" style="animation-delay:${i*50}ms">
+          <div><h3>${esc(x['Map']||'Unknown')}</h3>${tags ? `<div class="tags">${tags}</div>` : ''}</div>
+          <div><div class="pill">${n}/6</div><div class="pbar"><div class="pfill" style="width:${n/6*100}%"></div></div></div>
+        </div>`;
+      }).join('') : '<div class="empty">No active lobbies right now</div>';
+      err.style.display = 'none'; rtag.textContent = 'just now';
+      setTimeout(() => rtag.textContent = 'auto-refresh 15s', 2000);
+    } catch { err.style.display = 'block'; dot.classList.add('off'); lbl.textContent = 'Offline'; rtag.textContent = 'error'; }
+  }
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  poll(); setInterval(poll, 15000);
+</script>
+</body>
+</html>

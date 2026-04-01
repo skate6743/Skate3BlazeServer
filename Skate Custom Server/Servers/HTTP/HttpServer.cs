@@ -149,6 +149,7 @@ namespace Servers.HTTP
                         {
                             case "/sendchat":
                                 await SendChatEndpoint.SendChat(ctx);
+                                await res.OutputStream.WriteAsync(new byte[] { 0x31 }, 0, 1, ct);
                                 break;
                             case "/serverstats":
                                 byte[] data = Encoding.Latin1.GetBytes(await ServerstatsEndpoint.GetServerStats(ctx));
@@ -197,7 +198,7 @@ namespace Servers.HTTP
                                     responseContent = new XElement("IntegerContainer", new XElement("value", "0")).ToString();
                                     break;
                                 case "GetCategoriesAndTags":
-                                    responseContent = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "skate3", "config", "CategoriesAndTags.xml"));
+                                    responseContent = File.ReadAllText(Path.Combine(ServerGlobals.BaseDirectory, "wwwroot", "skate3", "config", "CategoriesAndTags.xml"));
                                     break;
                                 case "GetNumFilesForBrowser2":
                                     responseContent = new XElement("IntegerContainer", new XElement("value", "69")).ToString();
@@ -255,7 +256,7 @@ namespace Servers.HTTP
                             if (path.ToLower().Contains("skate3/webkit"))
                                 path = "/skate3/webkit/temp.html";
 
-                            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                            string filePath = Path.Combine(ServerGlobals.BaseDirectory, "wwwroot", path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
 
                             if (File.Exists(filePath))
                             {

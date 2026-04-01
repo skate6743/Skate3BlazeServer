@@ -16,10 +16,10 @@ namespace Servers.HTTP.ASMXEndpoints
             {
                 case FileType.SKATEPARK:
                     return (".bin", "SKATEPARK");
-                case FileType.PHOTO:
+                /*case FileType.PHOTO:
                     return (".jpg", "PHOTO");
                 case FileType.VIDEO:
-                    return (".flv", "VIDEO");
+                    return (".flv", "VIDEO");*/
                 default:
                     return null;
             }
@@ -89,10 +89,11 @@ namespace Servers.HTTP.ASMXEndpoints
                 CreateDate = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                 FileHash = hash
             };
+
             db.Files.Add(newFileData);
             await db.SaveChangesAsync();
 
-            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"wwwroot/skate3/content/PS3/{fileTypeInfo.Value.pathName}/{user.UserIdentification.BlazeId}/{newFileData.FileId}");
+            string dir = Path.Combine(ServerGlobals.BaseDirectory, $"wwwroot/skate3/content/PS3/{fileTypeInfo.Value.pathName}/{user.UserIdentification.BlazeId}/{newFileData.FileId}");
             Directory.CreateDirectory(dir);
 
             using (var fs = File.Create($"{dir}/{newFileData.FileId}_thumb.jpg"))
@@ -260,7 +261,7 @@ namespace Servers.HTTP.ASMXEndpoints
                 return;
 
             string path = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
+                ServerGlobals.BaseDirectory,
                 $"wwwroot/skate3/content/PS3/{extensionInfo.Value.pathName}/{file.UploaderId}/{file.FileId}/{file.FileId}{extensionInfo.Value.extension}"
             );
 
@@ -302,7 +303,7 @@ namespace Servers.HTTP.ASMXEndpoints
             await db.SaveChangesAsync();
 
             string pathToDelete = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
+                ServerGlobals.BaseDirectory,
                 $"wwwroot/skate3/content/PS3/SKATEPARK/{file.UploaderId}/{file.FileId}"
             );
 

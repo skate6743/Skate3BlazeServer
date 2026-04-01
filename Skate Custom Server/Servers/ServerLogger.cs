@@ -12,7 +12,7 @@ namespace Servers
             Task.Factory.StartNew(() =>
             {
                 foreach (var entry in _queue.GetConsumingEnumerable())
-                    File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _logFile), entry + Environment.NewLine);
+                    File.AppendAllText(Path.Combine(ServerGlobals.BaseDirectory, _logFile), entry + Environment.NewLine);
             }, TaskCreationOptions.LongRunning);
         }
 

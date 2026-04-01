@@ -4,9 +4,11 @@ using Servers.HTTP;
 using Servers.Models;
 using Servers;
 
-if (File.Exists("settings.json"))
+string settingsPath = Path.Combine(ServerGlobals.BaseDirectory, "settings.json");
+
+if (File.Exists(settingsPath))
 {
-    string serverSettingsJson = File.ReadAllText("settings.json");
+    string serverSettingsJson = File.ReadAllText(settingsPath);
     ServerSettings? serverSettings = JsonConvert.DeserializeObject<ServerSettings>(serverSettingsJson);
 
     if (serverSettings != null && serverSettings.LocalHost)
@@ -17,7 +19,7 @@ if (File.Exists("settings.json"))
 else
 {
     var settings = new ServerSettings();
-    File.WriteAllText("settings.json", JsonConvert.SerializeObject(settings));
+    File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings));
     ServerGlobals.ServerIP = await new HttpClient().GetStringAsync("https://api.ipify.org");
 }
 

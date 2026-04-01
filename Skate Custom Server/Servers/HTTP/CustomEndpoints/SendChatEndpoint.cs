@@ -32,8 +32,8 @@ namespace Servers.HTTP.CustomEndpoints
         {
             var badWords = new List<string>();
 
-            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "badwords.txt")))
-                badWords = File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "badwords.txt"))
+            if (File.Exists(Path.Combine(ServerGlobals.BaseDirectory, "badwords.txt")))
+                badWords = File.ReadAllLines(Path.Combine(ServerGlobals.BaseDirectory, "badwords.txt"))
                     .Select(x => x.Trim().ToLower())
                     .Where(x => !string.IsNullOrEmpty(x))
                     .ToList();
@@ -140,7 +140,7 @@ namespace Servers.HTTP.CustomEndpoints
 
                     Game game = user.CurrentGame;
 
-                    bool isValid = Regex.IsMatch(msg, @"^[a-zA-Z0-9 ?!/\\,._'():;-]*$");
+                    bool isValid = Regex.IsMatch(msg, @"^[a-zA-Z0-9 ?!/\\,._'()<>:;-]*$");
                     bool isOffensive = CheckForVulgarity(msg);
 
                     if (!isValid || isOffensive)

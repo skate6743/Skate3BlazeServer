@@ -9,7 +9,7 @@ namespace Servers.HTTP.CustomEndpoints
 
         private static bool IPWhitelisted(IPEndPoint endpoint)
         {
-            string IPsFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "adminips.txt");
+            string IPsFilePath = Path.Combine(ServerGlobals.BaseDirectory, "adminips.txt");
             if (File.Exists(IPsFilePath))
             {
                 string[] IPs = File.ReadAllLines(IPsFilePath);
@@ -27,7 +27,7 @@ namespace Servers.HTTP.CustomEndpoints
             if (!IPWhitelisted(ctx.Request.RemoteEndPoint))
                 return "Unauthorized";
 
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "spoofed_usernames.json");
+            string path = Path.Combine(ServerGlobals.BaseDirectory, "spoofed_usernames.json");
             Dictionary<string, string> spoofs = File.Exists(path)
                 ? JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(path))
                 : new Dictionary<string, string>();
@@ -61,15 +61,15 @@ namespace Servers.HTTP.CustomEndpoints
             if (!IPWhitelisted(ctx.Request.RemoteEndPoint))
                 return;
 
-            string name = ctx.Request.QueryString["name"];
-            string newName = ctx.Request.QueryString["newname"];
+            string? name = ctx.Request.QueryString["name"];
+            string? newName = ctx.Request.QueryString["newname"];
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(newName))
                 return;
 
             name = FixName(name);
             newName = FixName(newName);
 
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "spoofed_usernames.json");
+            string path = Path.Combine(ServerGlobals.BaseDirectory, "spoofed_usernames.json");
 
             lock (_spoofLock)
             {
@@ -91,7 +91,7 @@ namespace Servers.HTTP.CustomEndpoints
             if (string.IsNullOrEmpty(name))
                 return;
 
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "spoofed_usernames.json");
+            string path = Path.Combine(ServerGlobals.BaseDirectory, "spoofed_usernames.json");
 
             lock (_spoofLock)
             {

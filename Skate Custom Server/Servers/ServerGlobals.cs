@@ -6,6 +6,7 @@ namespace Servers
 {
     public class ServerGlobals
     {
+        public static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         public static string ServerIP = IPAddress.Any.ToString();
         public static ushort ServerPort = 42100;
         public static ushort HttpServerPort = 80;

@@ -1,7 +1,6 @@
 ﻿using Blaze.Components.Authentication.Models;
 using Blaze.Components.UserSessions.Models;
 using Servers.Models;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Net.Sockets;
 
 namespace Servers.Blaze.Models
