@@ -19,7 +19,7 @@ Before proceeding with these instructions, you must download the [No SyncCheck E
 2. On RPCS3 right click on Skate 3, and click on "Change Custom Configuration" (If you have not made one yet, click on "Create Custom Configuration")
 3. Head over to the CPU tab on the custom config, and set "XFloat Accuracy" to "Approximate", and make sure "Enable SPU loop detection" is unticked.
 4. Go to Network tab, and set Network Status to Connected, PSN Status to RPCN, turn UPNP on at the bottom.
-5. For the IP/Hosts switches field, paste in this: gosredirector.ea.com==172.237.109.212&&downloads.skate.online.ea.com==172.237.109.212
+5. For the IP/Hosts switches field, paste in this: gosredirector.ea.com=172.237.109.212&&downloads.skate.online.ea.com=172.237.109.212
 6. Save custom configuration and exit this config editor window.
 7. Click on the "RPCN" icon (right next to pads settings), and go to Account->Create Account if you don't have one already. You will need to fully go through the account creation process with verifying your email, etc.
 8. Now you can boot Skate 3 and connect to EA Nation!
@@ -35,11 +35,11 @@ Before proceeding with these instructions, please download the [Compiled Server 
 5. Right click on Skate 3, and click on Change Custom Configuration (If you haven't made a custom config yet then click on Create Custom Configuration)
 6. In the CPU tab set XFloat Accuracy to Approximate and make sure Enable SPU loop detection is unticked.
 7. Go to Network tab, and set Network Status to Connected, PSN Status to RPCN, and turn UPNP on at the bottom.
-8. Take your Radmin IP (26.x.x.x), and set IP/Hosts switches to: gosredirector.ea.com==YourRadminIPhere&&downloads.skate.online.ea.com==YourRadminIPhere (All your friends will set theirs to YOUR Radmin IP, since you are the one hosting the server)
+8. Take your Radmin IP (26.x.x.x), and set IP/Hosts switches to: gosredirector.ea.com=YourRadminIPhere&&downloads.skate.online.ea.com=YourRadminIPhere (All your friends will set theirs to YOUR Radmin IP, since you are the one hosting the server)
 9. In settings.json of the server files, set LocalHost to true and the LocalIPAddress to your Radmin IP.
 10. Run the server, now you and your friends can boot up Skate 3 and sign into EA Nation.
 ### Hosting publicly
-Forward ports 42100 and 80 for TCP, and lastly range 17000-17500 for UDP for relay servers used in lobbies. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com==YourPublicIPHere&&downloads.skate.online.ea.com==YourPublicIPHere"
+Forward ports 42100 and 80 for TCP, and lastly range 17000-17500 for UDP for relay servers used in lobbies. Set LocalHost to false in settings.json and run the server executable. Now in RPCS3 config under Network tab you need to set IP/Hosts switches to "gosredirector.ea.com=YourPublicIPHere&&downloads.skate.online.ea.com=YourPublicIPHere"
 # Special Thanks
 [@Aim4Kill](https://github.com/Aim4kill) for making the [BlazeSDK](https://github.com/Aim4kill/BlazeSDK) (Saved so much time with having the packet structures there for almost all Blaze commands)
 
