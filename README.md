@@ -13,12 +13,12 @@ Skate 3 Custom Blaze server for RPCS3/PS3 with working matchmaking and content s
 3. Run the "configEditor.exe" file inside that archive and locate to your rpcs3.exe path when it asks.
 4. Open your RPCS3, click on the "RPCN" icon (right next to pads settings), and go to Account->Create Account if you don't have one already. You will need to fully go through the account creation process with verifying your email, etc.
 5. Now you can boot Skate 3 and connect to EA Nation!
-### Manual setup (Recommended for Linux):
-Before proceeding with these instructions, you must download the [No SyncCheck EBOOT File](https://www.mediafire.com/file/jl35j90hokucchd/EBOOT.BIN/file) and put it to RPCS3/dev_hdd0/game/BLUS30464 (or BLES00760 on EU version)/USRDIR
-1. Open RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version.
+### Manual setup (Recommended for Linux and MacOS):
+Before proceeding with these instructions, open RPCS3, download the [No SyncCheck EBOOT File](https://www.mediafire.com/file/jl35j90hokucchd/EBOOT.BIN/file), right click on Skate 3->Open Folder->Open Game Data Folder then go to /USRDIR on the newly opened folder and move the downloaded "EBOOT.BIN" file there, replace the existing file if necessary. 
+1. On RPCS3, and at the top bar click on Help->Check for Updates, and proceed with updating to latest version.
 2. On RPCS3 right click on Skate 3, and click on "Change Custom Configuration" (If you have not made one yet, click on "Create Custom Configuration")
-3. Head over to the CPU tab on the custom config, and set "XFloat Accuracy" to "Approximate", and make sure "Enable SPU loop detection" is unticked.
-4. Go to Network tab, and set Network Status to Connected, PSN Status to RPCN, turn UPNP on at the bottom.
+3. Head over to the CPU tab on the custom config, and set "XFloat Accuracy" to "Approximate", go to the "Advanced tab" and make sure "Enable SPU loop detection" is disabled.
+4. Go to Network tab, and set Network Status to Connected, PSN Status to RPCN and enable UPNP on at the bottom.
 5. For the IP/Hosts switches field, paste in this: gosredirector.ea.com=172.237.109.212&&downloads.skate.online.ea.com=172.237.109.212
 6. Save custom configuration and exit this config editor window.
 7. Click on the "RPCN" icon (right next to pads settings), and go to Account->Create Account if you don't have one already. You will need to fully go through the account creation process with verifying your email, etc.
